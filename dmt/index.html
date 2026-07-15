@@ -1,27 +1,99 @@
 <!DOCTYPE html>
 <html lang="en">
 
-	<head>
-		    <meta charset="UTF-8">
-		        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-			    <title>Discord Time Calculator</title>
-			        <script src="discordmagictime.js" defer></script>
-	</head>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Discord Time Calculator</title>
+  <script>
+    (function () {
+      var stored = localStorage.getItem('dmt-theme');
+      var theme = stored === 'light' || stored === 'dark'
+        ? stored
+        : (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+  <link rel="stylesheet" href="styles.css">
+  <script src="discordmagictime.js" defer></script>
+</head>
 
-	<body>
-		    <label for="localdate">Date</label>
-		        <input type="date" id="localdate" name="localdate" value="" min="" max="" onclick="calcUTC();" required>
-			    |
-			        <label for="localtime"></label>
-				    <input type="time" id="localtime" name="localtime" min="" max="" onclick="calcUTC();" required>
-				        |
-					    <label for="outputFormat">Output Format</label>
-					        <select name="outputFormat" id="outputFormat" onclick="calcUTC();"></select>
-						    |
-						        <input type="button" onclick="calcUTC()" value="Calculate">
-							    |
-							        <label for="discorttime">Discord Time</label>
-								    <input type="text" id="discorttime" name="discorttime">
-	</body>
+<body>
+  <div class="dmt-app">
+    <header class="dmt-header">
+      <h1>Discord Time Calculator</h1>
+    </header>
+
+    <section class="dmt-panel">
+      <h2 class="dmt-panel-title">Date</h2>
+      <div class="dmt-row">
+        <div class="dmt-field">
+          <label for="date-year">Year</label>
+          <select id="date-year" aria-label="Year"></select>
+        </div>
+        <div class="dmt-field">
+          <label for="date-month">Month</label>
+          <select id="date-month" aria-label="Month"></select>
+        </div>
+        <div class="dmt-field">
+          <label for="date-day">Day</label>
+          <select id="date-day" aria-label="Day"></select>
+        </div>
+      </div>
+      <div class="dmt-time-display" id="date-preview" aria-live="polite">1970-01-01</div>
+    </section>
+
+    <section class="dmt-panel">
+      <h2 class="dmt-panel-title">Time (24-hour)</h2>
+      <div class="dmt-row">
+        <div class="dmt-field">
+          <label for="time-hour">Hour</label>
+          <select id="time-hour" aria-label="Hour (00–23)"></select>
+        </div>
+        <div class="dmt-field">
+          <label for="time-minute">Minute</label>
+          <select id="time-minute" aria-label="Minute"></select>
+        </div>
+        <div class="dmt-field dmt-field-with-btn">
+          <label for="time-second">Second</label>
+          <div class="dmt-field-control">
+            <select id="time-second" aria-label="Second"></select>
+            <button type="button" class="dmt-btn dmt-btn-secondary dmt-btn-inline" id="complete-btn">Complete</button>
+          </div>
+        </div>
+      </div>
+      <div class="dmt-time-display" id="time-preview" aria-live="polite">00:00:00</div>
+    </section>
+
+    <section class="dmt-panel">
+      <h2 class="dmt-panel-title">Output</h2>
+      <div class="dmt-field dmt-field-wide">
+        <label for="outputFormat">Discord format preview</label>
+        <select id="outputFormat" aria-label="Output format"></select>
+      </div>
+    </section>
+
+    <section class="dmt-panel">
+      <h2 class="dmt-panel-title">Result</h2>
+      <div class="dmt-output-row">
+        <input type="text" id="discorttime" name="discorttime" readonly aria-label="Discord timestamp">
+        <button type="button" class="dmt-btn dmt-btn-secondary" id="copy-btn">Copy</button>
+      </div>
+    </section>
+
+    <div class="dmt-actions">
+      <button type="button" class="dmt-btn" id="calc-btn">Calculate</button>
+      <button type="button" class="dmt-btn dmt-btn-secondary" id="now-btn">Set to now</button>
+      <div class="dmt-theme-switch">
+        <span class="dmt-theme-label" id="theme-label-dark">dark</span>
+        <label class="dmt-switch">
+          <input type="checkbox" id="theme-switch" role="switch" aria-label="Toggle light mode">
+          <span class="dmt-switch-slider"></span>
+        </label>
+        <span class="dmt-theme-label" id="theme-label-light">light</span>
+      </div>
+    </div>
+  </div>
+</body>
 
 </html>
