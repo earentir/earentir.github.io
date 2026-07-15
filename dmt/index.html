@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		    <meta charset="UTF-8">
+		        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+			    <title>Discord Time Calculator</title>
+			        <script src="discordmagictime.js" defer></script>
+	</head>
+
+	<body>
+		    <label for="localdate">Date</label>
+		        <input type="date" id="localdate" name="localdate" value="" min="" max="" onclick="calcUTC();" required>
+			    |
+			        <label for="localtime"></label>
+				    <input type="time" id="localtime" name="localtime" min="" max="" onclick="calcUTC();" required>
+				        |
+					    <label for="outputFormat">Output Format</label>
+					        <select name="outputFormat" id="outputFormat" onclick="calcUTC();"></select>
+						    |
+						        <input type="button" onclick="calcUTC()" value="Calculate">
+							    |
+							        <label for="discorttime">Discord Time</label>
+								    <input type="text" id="discorttime" name="discorttime">
+	</body>
+
+</html>
