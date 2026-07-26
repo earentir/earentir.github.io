@@ -951,7 +951,7 @@ function renderShell() {
         <h1>${t('tilesTitle')}</h1>
       </header>
 
-      <div class="dmt-panel-row">
+      <div class="dmt-panel-row dmt-panel-row-3">
         <section class="dmt-panel tiles-fold${foldOpen('tiles') ? ' open' : ''}" data-fold="tiles">
           ${foldHeader(t('tilesTileSize'), foldOpen('tiles'))}
           <div class="tiles-fold-body"${foldOpen('tiles') ? '' : ' hidden'}>
@@ -990,26 +990,26 @@ function renderShell() {
             </div>
           </div>
         </section>
-      </div>
 
-      <section class="dmt-panel tiles-fold${foldOpen('pricing') ? ' open' : ''}" data-fold="pricing">
-        ${foldHeader(t('tilesPricing'), foldOpen('pricing'))}
-        <div class="tiles-fold-body"${foldOpen('pricing') ? '' : ' hidden'}>
-          <div class="dmt-row tiles-row-with-clear">
-            <div class="dmt-field">
-              <label for="tile-price">${t('tilesPrice')}</label>
-              <input type="number" id="tile-price" min="0" step="0.01" placeholder="0" value="${attrValue(form.price)}">
-            </div>
-            <div class="dmt-field">
-              <label for="tile-per">${t('tilesPer')}</label>
-              <input type="number" id="tile-per" min="1" step="1" value="${attrValue(form.per)}">
-            </div>
-            <div class="tiles-row-clear">
-              <button type="button" class="dmt-btn dmt-btn-secondary" id="tiles-clear-pricing">${t('tilesClear')}</button>
+        <section class="dmt-panel tiles-fold${foldOpen('pricing') ? ' open' : ''}" data-fold="pricing">
+          ${foldHeader(t('tilesPricing'), foldOpen('pricing'))}
+          <div class="tiles-fold-body"${foldOpen('pricing') ? '' : ' hidden'}>
+            <div class="dmt-row tiles-row-with-clear">
+              <div class="dmt-field">
+                <label for="tile-price">${t('tilesPrice')}</label>
+                <input type="number" id="tile-price" min="0" step="0.01" placeholder="0" value="${attrValue(form.price)}">
+              </div>
+              <div class="dmt-field">
+                <label for="tile-per">${t('tilesPer')}</label>
+                <input type="number" id="tile-per" min="1" step="1" value="${attrValue(form.per)}">
+              </div>
+              <div class="tiles-row-clear">
+                <button type="button" class="dmt-btn dmt-btn-secondary" id="tiles-clear-pricing">${t('tilesClear')}</button>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
       <p class="dmt-hint" id="tiles-status"></p>
 
