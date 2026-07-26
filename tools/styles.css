@@ -799,6 +799,20 @@ textarea {
   min-width: 0;
 }
 
+.tiles-app .tiles-fold[data-fold="pricing"] .dmt-field {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.tiles-app .tiles-fold[data-fold="pricing"] .dmt-field label {
+  min-width: 0;
+}
+
+.tiles-app .tiles-fold[data-fold="pricing"] .dmt-row.tiles-row-with-clear {
+  align-items: flex-end;
+}
+
 .tiles-size-row {
   flex-wrap: wrap;
   align-items: center;
