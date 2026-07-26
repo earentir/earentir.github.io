@@ -817,14 +817,15 @@ textarea {
 
 .tiles-size-row .dmt-field input {
   flex: 0 0 auto;
-  width: 5.5em;
-  min-width: 0;
-  max-width: 7em;
+  width: 6em;
+  min-width: 6em;
+  max-width: 6em;
 }
 
 .dmt-panel-row .tiles-size-row,
 .dmt-panel-row .dmt-row.tiles-row-with-clear {
   flex-wrap: wrap;
+  align-items: flex-end;
 }
 
 .dmt-row.tiles-row-with-clear {
@@ -842,15 +843,19 @@ textarea {
 
 .dmt-row.tiles-row-with-clear .dmt-field input {
   flex: 0 0 auto;
-  width: 5.5em;
-  min-width: 0;
-  max-width: 7em;
+  width: 6em;
+  min-width: 6em;
+  max-width: 6em;
 }
 
 .dmt-row.tiles-row-with-clear .tiles-row-clear {
   flex: 0 0 auto;
-  align-self: center;
+  align-self: flex-end;
   margin-left: 4px;
+}
+
+.dmt-panel-row .dmt-row.tiles-row-with-clear .tiles-row-clear {
+  align-self: flex-end;
 }
 
 .dmt-row.tiles-row-with-clear .tiles-row-clear .dmt-btn {
