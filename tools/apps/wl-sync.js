@@ -93,7 +93,7 @@ function renderSummary() {
     return;
   }
   if (!watchlist) {
-    box.innerHTML = `<p class="dmt-hint" style="margin:0">${t('wlNoList')}</p>`;
+    box.innerHTML = `<p class="dmt-hint">${t('wlNoList')}</p>`;
     return;
   }
   box.innerHTML = `
