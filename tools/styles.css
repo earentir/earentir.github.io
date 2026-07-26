@@ -1483,6 +1483,16 @@ textarea {
   margin-top: 14px;
 }
 
+.wl-sync-options {
+  align-items: flex-end;
+}
+
+.wl-sync-options .wl-switch-row {
+  margin-top: 0;
+  padding-bottom: 2px;
+  flex: 1 1 auto;
+}
+
 .wl-summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));

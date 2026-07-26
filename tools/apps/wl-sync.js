@@ -213,7 +213,7 @@ function render() {
               <input type="text" id="wl-playlist" value="IMDb Watchlist" spellcheck="false">
             </div>
           </div>
-          <div class="dmt-row">
+          <div class="dmt-row wl-sync-options">
             <div class="dmt-field">
               <label for="wl-mode">${t('wlMode')}</label>
               <select id="wl-mode">
@@ -222,29 +222,29 @@ function render() {
                 <option value="create">${t('wlModeCreate')}</option>
               </select>
             </div>
-          </div>
-          <div class="wl-switch-row">
-            <label class="tiles-switch">
-              <span class="tiles-switch-label">${t('wlMoviesOnly')}</span>
-              <span class="dmt-switch">
-                <input type="checkbox" id="wl-movies-only" role="switch" aria-label="${t('wlMoviesOnly')}">
-                <span class="dmt-switch-slider"></span>
-              </span>
-            </label>
-            <label class="tiles-switch">
-              <span class="tiles-switch-label">${t('wlPublic')}</span>
-              <span class="dmt-switch">
-                <input type="checkbox" id="wl-public" role="switch" aria-label="${t('wlPublic')}">
-                <span class="dmt-switch-slider"></span>
-              </span>
-            </label>
-            <label class="tiles-switch">
-              <span class="tiles-switch-label">${t('wlExactOnly')}</span>
-              <span class="dmt-switch">
-                <input type="checkbox" id="wl-exact-only" role="switch" aria-label="${t('wlExactOnly')}" checked>
-                <span class="dmt-switch-slider"></span>
-              </span>
-            </label>
+            <div class="wl-switch-row">
+              <label class="tiles-switch">
+                <span class="tiles-switch-label">${t('wlMoviesOnly')}</span>
+                <span class="dmt-switch">
+                  <input type="checkbox" id="wl-movies-only" role="switch" aria-label="${t('wlMoviesOnly')}">
+                  <span class="dmt-switch-slider"></span>
+                </span>
+              </label>
+              <label class="tiles-switch">
+                <span class="tiles-switch-label">${t('wlPublic')}</span>
+                <span class="dmt-switch">
+                  <input type="checkbox" id="wl-public" role="switch" aria-label="${t('wlPublic')}">
+                  <span class="dmt-switch-slider"></span>
+                </span>
+              </label>
+              <label class="tiles-switch">
+                <span class="tiles-switch-label">${t('wlExactOnly')}</span>
+                <span class="dmt-switch">
+                  <input type="checkbox" id="wl-exact-only" role="switch" aria-label="${t('wlExactOnly')}" checked>
+                  <span class="dmt-switch-slider"></span>
+                </span>
+              </label>
+            </div>
           </div>
           <div class="dmt-actions">
             <button type="button" class="dmt-btn" id="wl-dry">${t('wlDryRun')}</button>
