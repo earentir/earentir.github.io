@@ -98,8 +98,6 @@ export function initRouter() {
 }
 
 export function remountCurrent() {
-  if (currentId) {
-    return loadTool(currentId);
-  }
-  return initRouter();
+  const id = normalizePath(location.pathname);
+  return loadTool(getToolById(id) ? id : (currentId || 'home'));
 }

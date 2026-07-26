@@ -247,6 +247,10 @@ export function setLang(lang) {
   if (lang !== 'en' && lang !== 'el') {
     return;
   }
+  if (lang === currentLang && document.documentElement.lang === lang) {
+    localStorage.setItem(LANG_KEY, lang);
+    return;
+  }
   currentLang = lang;
   localStorage.setItem(LANG_KEY, lang);
   document.documentElement.lang = lang;

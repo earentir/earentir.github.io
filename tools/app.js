@@ -60,8 +60,16 @@ function syncLangButtons() {
 }
 
 function initLangButtons() {
-  document.getElementById('lang-en')?.addEventListener('click', () => setLang('en'));
-  document.getElementById('lang-el')?.addEventListener('click', () => setLang('el'));
+  document.getElementById('lang-en')?.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setLang('en');
+  });
+  document.getElementById('lang-el')?.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setLang('el');
+  });
   syncLangButtons();
   onLangChange(() => {
     syncLangButtons();

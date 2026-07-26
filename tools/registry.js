@@ -10,13 +10,13 @@ export const tools = {
   dmt: {
     id: 'dmt',
     path: '/tools/dmt',
-    load: () => import('./apps/dmt.js?v=38'),
+    load: () => import('./apps/dmt.js?v=39'),
     titleKey: 'menuDmt',
   },
   tiles: {
     id: 'tiles',
     path: '/tools/tiles',
-    load: () => import('./apps/tiles.js?v=38'),
+    load: () => import('./apps/tiles.js?v=39'),
     titleKey: 'tilesTitle',
   },
 };
