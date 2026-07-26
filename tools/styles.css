@@ -896,14 +896,10 @@ textarea {
 
 .tiles-cover-full {
   fill: var(--dmt-accent);
-  stroke: var(--dmt-panel-bg);
-  stroke-width: 0.75;
 }
 
 .tiles-cover-cut {
   fill: var(--dmt-accent-hover);
-  stroke: var(--dmt-panel-bg);
-  stroke-width: 0.75;
 }
 
 .tiles-cover-legend {
