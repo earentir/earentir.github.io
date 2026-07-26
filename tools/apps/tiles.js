@@ -951,44 +951,46 @@ function renderShell() {
         <h1>${t('tilesTitle')}</h1>
       </header>
 
-      <section class="dmt-panel tiles-fold${foldOpen('tiles') ? ' open' : ''}" data-fold="tiles">
-        ${foldHeader(t('tilesTileSize'), foldOpen('tiles'))}
-        <div class="tiles-fold-body"${foldOpen('tiles') ? '' : ' hidden'}>
-          <div class="dmt-row tiles-size-row">
-            <div class="dmt-field">
-              <label for="tile-width">${t('tilesWidth')}</label>
-              <input type="number" id="tile-width" min="1" step="1" value="${attrValue(form.tileW)}">
-            </div>
-            <div class="dmt-field">
-              <label for="tile-height">${t('tilesHeight')}</label>
-              <input type="number" id="tile-height" min="1" step="1" value="${attrValue(form.tileH)}">
-            </div>
-            <div class="dmt-field">
-              <label for="tile-count">${t('tilesCount')}</label>
-              <input type="number" id="tile-count" min="1" step="1" value="${attrValue(form.count)}">
+      <div class="dmt-panel-row">
+        <section class="dmt-panel tiles-fold${foldOpen('tiles') ? ' open' : ''}" data-fold="tiles">
+          ${foldHeader(t('tilesTileSize'), foldOpen('tiles'))}
+          <div class="tiles-fold-body"${foldOpen('tiles') ? '' : ' hidden'}>
+            <div class="dmt-row tiles-size-row">
+              <div class="dmt-field">
+                <label for="tile-width">${t('tilesWidth')}</label>
+                <input type="number" id="tile-width" min="1" step="1" value="${attrValue(form.tileW)}">
+              </div>
+              <div class="dmt-field">
+                <label for="tile-height">${t('tilesHeight')}</label>
+                <input type="number" id="tile-height" min="1" step="1" value="${attrValue(form.tileH)}">
+              </div>
+              <div class="dmt-field">
+                <label for="tile-count">${t('tilesCount')}</label>
+                <input type="number" id="tile-count" min="1" step="1" value="${attrValue(form.count)}">
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section class="dmt-panel tiles-fold${foldOpen('space') ? ' open' : ''}" data-fold="space">
-        ${foldHeader(t('tilesSpaceSize'), foldOpen('space'))}
-        <div class="tiles-fold-body"${foldOpen('space') ? '' : ' hidden'}>
-          <div class="dmt-row tiles-row-with-clear">
-            <div class="dmt-field">
-              <label for="space-width">${t('tilesWidth')}</label>
-              <input type="number" id="space-width" min="1" step="1" value="${attrValue(form.spaceW)}">
-            </div>
-            <div class="dmt-field">
-              <label for="space-height">${t('tilesHeight')}</label>
-              <input type="number" id="space-height" min="1" step="1" value="${attrValue(form.spaceH)}">
-            </div>
-            <div class="tiles-row-clear">
-              <button type="button" class="dmt-btn dmt-btn-secondary" id="tiles-clear-space">${t('tilesClear')}</button>
+        <section class="dmt-panel tiles-fold${foldOpen('space') ? ' open' : ''}" data-fold="space">
+          ${foldHeader(t('tilesSpaceSize'), foldOpen('space'))}
+          <div class="tiles-fold-body"${foldOpen('space') ? '' : ' hidden'}>
+            <div class="dmt-row tiles-row-with-clear">
+              <div class="dmt-field">
+                <label for="space-width">${t('tilesWidth')}</label>
+                <input type="number" id="space-width" min="1" step="1" value="${attrValue(form.spaceW)}">
+              </div>
+              <div class="dmt-field">
+                <label for="space-height">${t('tilesHeight')}</label>
+                <input type="number" id="space-height" min="1" step="1" value="${attrValue(form.spaceH)}">
+              </div>
+              <div class="tiles-row-clear">
+                <button type="button" class="dmt-btn dmt-btn-secondary" id="tiles-clear-space">${t('tilesClear')}</button>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
       <section class="dmt-panel tiles-fold${foldOpen('pricing') ? ' open' : ''}" data-fold="pricing">
         ${foldHeader(t('tilesPricing'), foldOpen('pricing'))}

@@ -130,7 +130,7 @@ function render() {
         <h1>${t('dmtTitle')}</h1>
       </header>
 
-      <div class="dmt-datetime-row">
+      <div class="dmt-panel-row">
         <section class="dmt-panel tiles-fold${foldOpen('date') ? ' open' : ''}" data-fold="date">
           ${foldHeader(t('dmtDate'), foldOpen('date'))}
           <div class="tiles-fold-body"${foldOpen('date') ? '' : ' hidden'}>
