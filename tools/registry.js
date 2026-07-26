@@ -10,7 +10,7 @@ export const tools = {
   dmt: {
     id: 'dmt',
     path: '/tools/dmt',
-    load: () => import('./apps/dmt.js?v=43'),
+    load: () => import('./apps/dmt.js?v=44'),
     titleKey: 'menuDmt',
   },
   tiles: {

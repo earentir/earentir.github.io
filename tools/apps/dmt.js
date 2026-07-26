@@ -164,13 +164,13 @@ function render() {
                 <label for="time-minute">${t('dmtMinute')}</label>
                 <select id="time-minute" aria-label="${t('dmtMinute')}"></select>
               </div>
-              <div class="dmt-field">
+              <div class="dmt-field dmt-field-with-btn">
                 <label for="time-second">${t('dmtSecond')}</label>
-                <select id="time-second" aria-label="${t('dmtSecond')}"></select>
+                <div class="dmt-field-control">
+                  <select id="time-second" aria-label="${t('dmtSecond')}"></select>
+                  <button type="button" class="dmt-btn dmt-btn-secondary dmt-btn-inline" id="complete-btn">${t('dmtComplete')}</button>
+                </div>
               </div>
-            </div>
-            <div class="dmt-actions">
-              <button type="button" class="dmt-btn dmt-btn-secondary" id="complete-btn">${t('dmtComplete')}</button>
             </div>
             <div class="dmt-time-display" id="time-preview" aria-live="polite"></div>
           </div>
