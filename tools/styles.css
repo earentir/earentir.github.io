@@ -1475,6 +1475,14 @@ textarea {
   margin-top: 10px;
 }
 
+.wl-switch-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 28px;
+  align-items: center;
+  margin-top: 14px;
+}
+
 .wl-summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
