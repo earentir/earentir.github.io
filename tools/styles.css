@@ -508,8 +508,14 @@ textarea {
   box-shadow: 0 0 0 1px var(--dmt-accent);
 }
 
-.dmt-field-wide select {
-  min-width: 100%;
+.dmt-field-wide {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.dmt-field-wide select,
+.dmt-field-wide input[type="text"] {
+  min-width: 0;
   width: 100%;
 }
 
