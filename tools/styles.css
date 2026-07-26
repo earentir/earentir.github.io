@@ -461,7 +461,7 @@ textarea {
 }
 
 .dmt-panel-row-3 {
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1.35fr 1fr 1fr;
 }
 
 .dmt-panel-row > .dmt-panel {
