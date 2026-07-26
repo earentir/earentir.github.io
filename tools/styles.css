@@ -346,7 +346,7 @@ textarea {
 }
 
 .tp-workspace {
-  flex: 1;
+  flex: 0 1 auto;
   background: var(--dmt-bg);
   position: relative;
   z-index: 1;
@@ -424,11 +424,11 @@ textarea {
   position: relative;
   max-width: 1040px;
   margin: 0 auto;
-  padding: 32px 20px 48px 72px;
+  padding: 32px 20px 24px 72px;
 }
 
 .dmt-header {
-  margin: 0;
+  display: contents;
 }
 
 .dmt-header h1 {
@@ -477,11 +477,11 @@ textarea {
 
 @media (max-width: 760px) {
   .dmt-app {
-    padding: 32px 20px 48px;
-    max-width: 960px;
+    padding: 32px 20px 24px;
   }
 
   .dmt-header {
+    display: block;
     margin-bottom: 28px;
   }
 
