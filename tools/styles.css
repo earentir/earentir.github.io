@@ -812,9 +812,9 @@ textarea {
 
 .tiles-size-row {
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-end;
   justify-content: flex-start;
-  gap: 12px 16px;
+  gap: 12px;
 }
 
 .tiles-size-row .dmt-field {
@@ -837,6 +837,7 @@ textarea {
 .dmt-panel-row .dmt-row.tiles-row-with-clear {
   flex-wrap: nowrap;
   align-items: flex-end;
+  gap: 12px;
 }
 
 .dmt-panel-row .dmt-row.tiles-row-with-clear .dmt-field input {
@@ -849,9 +850,9 @@ textarea {
 .dmt-row.tiles-row-with-clear {
   flex-wrap: wrap;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-end;
   justify-content: flex-start;
-  gap: 10px 8px;
+  gap: 12px;
 }
 
 .dmt-row.tiles-row-with-clear .dmt-field {
@@ -868,13 +869,20 @@ textarea {
 
 .dmt-row.tiles-row-with-clear .tiles-row-clear {
   flex: 0 0 auto;
-  align-self: flex-end;
-  margin-left: 2px;
+  margin: 0;
   padding: 0;
 }
 
-.dmt-panel-row .dmt-row.tiles-row-with-clear .tiles-row-clear {
-  align-self: flex-end;
+.tiles-clear-label {
+  visibility: hidden;
+  user-select: none;
+}
+
+.dmt-row.tiles-row-with-clear .tiles-row-clear .tiles-remove-btn {
+  box-sizing: border-box;
+  width: calc(1em + 16px);
+  height: calc(1em + 16px);
+  padding: 0;
 }
 
 @media (max-width: 540px) {
@@ -918,24 +926,27 @@ textarea {
   max-width: 5.5em;
 }
 
+.tiles-app .dmt-panel-row .tiles-size-row,
 .tiles-app .dmt-panel-row .dmt-row.tiles-row-with-clear {
   flex-wrap: nowrap;
+  gap: 12px;
 }
 
 .tiles-app .dmt-row.tiles-row-with-clear {
   justify-content: flex-start;
-  gap: 10px 8px;
+  gap: 12px;
 }
 
 .tiles-app .dmt-row.tiles-row-with-clear .tiles-row-clear {
   flex: 0 0 auto;
-  margin-left: 2px;
+  margin: 0;
   padding: 0;
 }
 
 .tiles-app .dmt-row.tiles-row-with-clear .tiles-row-clear .tiles-remove-btn {
-  width: 1.5rem;
-  height: 1.5rem;
+  box-sizing: border-box;
+  width: calc(1em + 16px);
+  height: calc(1em + 16px);
   padding: 0;
 }
 
