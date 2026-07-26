@@ -130,50 +130,52 @@ function render() {
         <h1>${t('dmtTitle')}</h1>
       </header>
 
-      <section class="dmt-panel tiles-fold${foldOpen('date') ? ' open' : ''}" data-fold="date">
-        ${foldHeader(t('dmtDate'), foldOpen('date'))}
-        <div class="tiles-fold-body"${foldOpen('date') ? '' : ' hidden'}>
-          <div class="dmt-row">
-            <div class="dmt-field">
-              <label for="date-year">${t('dmtYear')}</label>
-              <select id="date-year" aria-label="${t('dmtYear')}"></select>
-            </div>
-            <div class="dmt-field">
-              <label for="date-month">${t('dmtMonth')}</label>
-              <select id="date-month" aria-label="${t('dmtMonth')}"></select>
-            </div>
-            <div class="dmt-field">
-              <label for="date-day">${t('dmtDay')}</label>
-              <select id="date-day" aria-label="${t('dmtDay')}"></select>
-            </div>
-          </div>
-          <div class="dmt-time-display" id="date-preview" aria-live="polite"></div>
-        </div>
-      </section>
-
-      <section class="dmt-panel tiles-fold${foldOpen('time') ? ' open' : ''}" data-fold="time">
-        ${foldHeader(t('dmtTime'), foldOpen('time'))}
-        <div class="tiles-fold-body"${foldOpen('time') ? '' : ' hidden'}>
-          <div class="dmt-row">
-            <div class="dmt-field">
-              <label for="time-hour">${t('dmtHour')}</label>
-              <select id="time-hour" aria-label="${t('dmtHour')}"></select>
-            </div>
-            <div class="dmt-field">
-              <label for="time-minute">${t('dmtMinute')}</label>
-              <select id="time-minute" aria-label="${t('dmtMinute')}"></select>
-            </div>
-            <div class="dmt-field dmt-field-with-btn">
-              <label for="time-second">${t('dmtSecond')}</label>
-              <div class="dmt-field-control">
-                <select id="time-second" aria-label="${t('dmtSecond')}"></select>
-                <button type="button" class="dmt-btn dmt-btn-secondary dmt-btn-inline" id="complete-btn">${t('dmtComplete')}</button>
+      <div class="dmt-datetime-row">
+        <section class="dmt-panel tiles-fold${foldOpen('date') ? ' open' : ''}" data-fold="date">
+          ${foldHeader(t('dmtDate'), foldOpen('date'))}
+          <div class="tiles-fold-body"${foldOpen('date') ? '' : ' hidden'}>
+            <div class="dmt-row">
+              <div class="dmt-field">
+                <label for="date-year">${t('dmtYear')}</label>
+                <select id="date-year" aria-label="${t('dmtYear')}"></select>
+              </div>
+              <div class="dmt-field">
+                <label for="date-month">${t('dmtMonth')}</label>
+                <select id="date-month" aria-label="${t('dmtMonth')}"></select>
+              </div>
+              <div class="dmt-field">
+                <label for="date-day">${t('dmtDay')}</label>
+                <select id="date-day" aria-label="${t('dmtDay')}"></select>
               </div>
             </div>
+            <div class="dmt-time-display" id="date-preview" aria-live="polite"></div>
           </div>
-          <div class="dmt-time-display" id="time-preview" aria-live="polite"></div>
-        </div>
-      </section>
+        </section>
+
+        <section class="dmt-panel tiles-fold${foldOpen('time') ? ' open' : ''}" data-fold="time">
+          ${foldHeader(t('dmtTime'), foldOpen('time'))}
+          <div class="tiles-fold-body"${foldOpen('time') ? '' : ' hidden'}>
+            <div class="dmt-row">
+              <div class="dmt-field">
+                <label for="time-hour">${t('dmtHour')}</label>
+                <select id="time-hour" aria-label="${t('dmtHour')}"></select>
+              </div>
+              <div class="dmt-field">
+                <label for="time-minute">${t('dmtMinute')}</label>
+                <select id="time-minute" aria-label="${t('dmtMinute')}"></select>
+              </div>
+              <div class="dmt-field dmt-field-with-btn">
+                <label for="time-second">${t('dmtSecond')}</label>
+                <div class="dmt-field-control">
+                  <select id="time-second" aria-label="${t('dmtSecond')}"></select>
+                  <button type="button" class="dmt-btn dmt-btn-secondary dmt-btn-inline" id="complete-btn">${t('dmtComplete')}</button>
+                </div>
+              </div>
+            </div>
+            <div class="dmt-time-display" id="time-preview" aria-live="polite"></div>
+          </div>
+        </section>
+      </div>
 
       <p class="dmt-hint" id="dmt-status"></p>
 
