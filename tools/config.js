@@ -1,9 +1,15 @@
 export function resolveApiBase() {
   const host = location.hostname;
-  if (host === 'localhost' || host === '127.0.0.1') {
+  // Local tools proxy (serve-tools.py) and production earentir.dev reverse
+  // proxy both expect same-origin relative API paths.
+  if (host === 'localhost' || host === '127.0.0.1' || host === 'earentir.dev' || host.endsWith('.earentir.dev')) {
     return '';
   }
-  return 'https://api.earentir.dev';
+  // GitHub Pages has no API proxy — call earapi directly (CORS required).
+  if (host.endsWith('github.io')) {
+    return 'https://api.earentir.dev';
+  }
+  return '';
 }
 
 export const API_BASE = resolveApiBase();

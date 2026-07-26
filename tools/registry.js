@@ -10,25 +10,25 @@ export const tools = {
   dmt: {
     id: 'dmt',
     path: '/tools/dmt',
-    load: () => import('./apps/dmt.js?v=40'),
+    load: () => import('./apps/dmt.js?v=41'),
     titleKey: 'menuDmt',
   },
   tiles: {
     id: 'tiles',
     path: '/tools/tiles',
-    load: () => import('./apps/tiles.js?v=40'),
+    load: () => import('./apps/tiles.js?v=41'),
     titleKey: 'tilesTitle',
   },
   'wl-sync': {
     id: 'wl-sync',
     path: '/tools/wl-sync',
-    load: () => import('./apps/wl-sync.js?v=40'),
+    load: () => import('./apps/wl-sync.js?v=41'),
     titleKey: 'wlSyncTitle',
   },
   'wl-compare': {
     id: 'wl-compare',
     path: '/tools/wl-compare',
-    load: () => import('./apps/wl-compare.js?v=40'),
+    load: () => import('./apps/wl-compare.js?v=41'),
     titleKey: 'wlCompareTitle',
   },
 };
