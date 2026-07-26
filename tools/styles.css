@@ -551,10 +551,14 @@ textarea {
   align-items: flex-end;
 }
 
+.dmt-row + .dmt-row {
+  margin-top: 14px;
+}
+
 .dmt-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
 }
 
@@ -565,6 +569,7 @@ textarea {
 
 .dmt-field select,
 .dmt-field input[type="text"],
+.dmt-field input[type="password"],
 .dmt-output-row input[type="text"] {
   appearance: none;
   background: var(--dmt-input-bg);
@@ -580,12 +585,14 @@ textarea {
 
 .dmt-field select:hover,
 .dmt-field input[type="text"]:hover,
+.dmt-field input[type="password"]:hover,
 .dmt-output-row input[type="text"]:hover {
   border-color: var(--dmt-input-border-hover);
 }
 
 .dmt-field select:focus,
 .dmt-field input[type="text"]:focus,
+.dmt-field input[type="password"]:focus,
 .dmt-output-row input[type="text"]:focus {
   outline: none;
   border-color: var(--dmt-accent);
