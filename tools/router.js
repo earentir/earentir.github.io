@@ -1,4 +1,4 @@
-import { getToolById, getToolTitle } from './registry.js?v=34';
+import { getToolById, getToolTitle } from './registry.js?v=37';
 import { t } from './i18n.js';
 
 const BASE = '/tools';
@@ -45,15 +45,32 @@ async function loadTool(toolId) {
   }
 
   if (currentModule?.unmount) {
-    currentModule.unmount();
+    try {
+      currentModule.unmount();
+    } catch {
+      /* ignore unmount errors */
+    }
   }
   root.replaceChildren();
   currentId = tool.id;
 
-  const mod = await tool.load();
-  currentModule = mod;
-  if (mod.mount) {
-    mod.mount(root);
+  try {
+    const mod = await tool.load();
+    currentModule = mod;
+    if (mod.mount) {
+      mod.mount(root);
+    }
+  } catch (err) {
+    currentModule = null;
+    root.innerHTML = `
+      <div class="dmt-app">
+        <header class="dmt-header">
+          <h1>${t('appTitle')}</h1>
+          <p class="dmt-hint dmt-hint-error">${t('tilesError')}: ${String(err?.message || err)}</p>
+        </header>
+      </div>
+    `;
+    console.error(err);
   }
 
   document.title = tool.id === 'home'

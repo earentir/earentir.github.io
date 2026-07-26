@@ -1,5 +1,5 @@
 import { t } from '../i18n.js?v=33';
-import { API_BASE } from '../config.js';
+import { API_BASE, fetchJson } from '../config.js?v=37';
 
 const YEAR_MIN = 1970;
 const YEAR_MAX = 2100;
@@ -356,8 +356,7 @@ async function fetchTimestamp({ complete = false, formatIndex = null } = {}) {
     params.set('complete', 'true');
   }
 
-  const response = await fetch(`${API_BASE}/dmt/v1/timestamp?${params.toString()}`);
-  const payload = await response.json();
+  const payload = await fetchJson(`${API_BASE}/dmt/v1/timestamp?${params.toString()}`);
   if (!payload?.success) {
     throw new Error(payload?.msg || t('dmtError'));
   }

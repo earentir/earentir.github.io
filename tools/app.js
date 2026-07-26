@@ -3,7 +3,7 @@ import { initTheme, toggleTheme, getTheme, onThemeChange } from './theme.js';
 import { initFont, cycleFont, getFont, FONTS, onFontChange } from './font.js';
 import { initDesktop, onDesktopChange } from './desktop.js';
 import { initMenu } from './menu.js';
-import { initRouter, remountCurrent } from './router.js?v=34';
+import { initRouter, remountCurrent } from './router.js?v=37';
 
 const SHADE = '\u2591'; // ░ light shade
 

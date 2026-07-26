@@ -1,5 +1,5 @@
 import { t } from '../i18n.js?v=32';
-import { API_BASE } from '../config.js';
+import { API_BASE, fetchJson } from '../config.js?v=37';
 
 const LIST_KEY = 'tools-tiles-list';
 const FORM_KEY = 'tools-tiles-form';
@@ -414,8 +414,7 @@ async function fetchArrange(form, orientation) {
   });
   applyTilecalcOptions(params, form);
 
-  const response = await fetch(`${API_BASE}/tilecalc/v1/arrange?${params.toString()}`);
-  const payload = await response.json();
+  const payload = await fetchJson(`${API_BASE}/tilecalc/v1/arrange?${params.toString()}`);
   if (!payload?.success) {
     throw new Error(payload?.msg || t('tilesError'));
   }
@@ -429,8 +428,7 @@ async function fetchCoverage(form, orientation) {
   });
   applyTilecalcOptions(params, form);
 
-  const response = await fetch(`${API_BASE}/tilecalc/v1/coverage?${params.toString()}`);
-  const payload = await response.json();
+  const payload = await fetchJson(`${API_BASE}/tilecalc/v1/coverage?${params.toString()}`);
   if (!payload?.success) {
     throw new Error(payload?.msg || t('tilesError'));
   }
@@ -470,7 +468,9 @@ function renderGraph(layout, { maxW = 280, maxH = 80, tileGap = false } = {}) {
     cols * cellW + gapCountX * gap <= maxW
     && rows * cellH + gapCountY * gap <= maxH
   );
-  while (!fits() && (cellW > 1 || cellH > 1)) {
+  let guard = 0;
+  while (!fits() && (cellW > 1 || cellH > 1) && guard < 4096) {
+    guard += 1;
     if (cellW >= cellH && cellW > 1) {
       cellW -= 1;
     } else if (cellH > 1) {
@@ -478,7 +478,8 @@ function renderGraph(layout, { maxW = 280, maxH = 80, tileGap = false } = {}) {
     } else {
       cellW = Math.max(1, cellW - 1);
     }
-    cellH = Math.max(1, Math.round(cellW * (tileH / tileW)));
+    const nextH = Math.round(cellW * (tileH / tileW));
+    cellH = Number.isFinite(nextH) ? Math.max(1, nextH) : 1;
   }
 
   const rawW = cols * cellW + gapCountX * gap;
@@ -682,7 +683,7 @@ function renderLayouts() {
       <div class="tiles-orient-wrap">
         <table class="tiles-orient-table">
           <tbody>
-            ${lastArrange.layouts.map((layout, index) => {
+            ${lastArrange.layouts.slice(0, 48).map((layout, index) => {
               const isSelected = index === selectedLayoutIndex ? ' selected' : '';
               return `
                 <tr class="tiles-orient-row${isSelected}" data-layout-index="${index}" tabindex="0">
