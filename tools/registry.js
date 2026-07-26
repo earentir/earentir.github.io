@@ -22,7 +22,7 @@ export const tools = {
   'wl-sync': {
     id: 'wl-sync',
     path: '/tools/wl-sync',
-    load: () => import('./apps/wl-sync.js?v=52'),
+    load: () => import('./apps/wl-sync.js?v=53'),
     titleKey: 'wlSyncTitle',
   },
   'wl-compare': {

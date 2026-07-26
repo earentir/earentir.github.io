@@ -154,12 +154,10 @@ function render() {
         ${foldHeader(t('wlSourceFold'), foldOpen('source'))}
         <div class="tiles-fold-body"${foldOpen('source') ? '' : ' hidden'}>
           <div class="dmt-row">
-            <div class="dmt-field dmt-field-wide">
+            <div class="dmt-field">
               <label for="wl-owner">${t('wlOwner')}</label>
               <input type="text" id="wl-owner" placeholder="${t('wlOwnerPlaceholder')}" autocomplete="nickname">
             </div>
-          </div>
-          <div class="dmt-row">
             <div class="dmt-field dmt-field-wide">
               <label for="wl-input">${t('wlInput')}</label>
               <input type="text" id="wl-input" placeholder="${t('wlInputPlaceholder')}" spellcheck="false">
@@ -188,8 +186,6 @@ function render() {
               <label for="wl-jf-url">${t('wlJfUrl')}</label>
               <input type="text" id="wl-jf-url" value="${escapeHtml(creds.url)}" placeholder="http://jellyfin.local:8096" spellcheck="false">
             </div>
-          </div>
-          <div class="dmt-row">
             <div class="dmt-field dmt-field-wide">
               <label for="wl-jf-key">${t('wlJfKey')}</label>
               <input type="password" id="wl-jf-key" value="${escapeHtml(creds.apiKey)}" placeholder="${t('wlJfKeyPlaceholder')}" autocomplete="off">
