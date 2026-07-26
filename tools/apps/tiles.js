@@ -985,7 +985,11 @@ function renderShell() {
                 <input type="number" id="space-height" min="1" step="1" value="${attrValue(form.spaceH)}">
               </div>
               <div class="tiles-row-clear">
-                <button type="button" class="dmt-btn dmt-btn-secondary" id="tiles-clear-space">${t('tilesClear')}</button>
+                <button type="button" class="tiles-remove-btn" id="tiles-clear-space" title="${attrValue(t('tilesClear'))}" aria-label="${attrValue(t('tilesClear'))}">
+                  <svg class="tiles-remove-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+                    <path fill="currentColor" d="M6 2h4l.5 1H13v1.5H3V3h2.5L6 2zm-2 3.5h8l-.6 8.2A1.5 1.5 0 0 1 9.9 15H6.1a1.5 1.5 0 0 1-1.5-1.3L4 5.5zm2.2 1.5-.3 5h1.2l.3-5H6.2zm2.4 0-.3 5h1.2l.3-5H8.6z"/>
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
@@ -1004,7 +1008,11 @@ function renderShell() {
                 <input type="number" id="tile-per" min="1" step="1" value="${attrValue(form.per)}">
               </div>
               <div class="tiles-row-clear">
-                <button type="button" class="dmt-btn dmt-btn-secondary" id="tiles-clear-pricing">${t('tilesClear')}</button>
+                <button type="button" class="tiles-remove-btn" id="tiles-clear-pricing" title="${attrValue(t('tilesClear'))}" aria-label="${attrValue(t('tilesClear'))}">
+                  <svg class="tiles-remove-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+                    <path fill="currentColor" d="M6 2h4l.5 1H13v1.5H3V3h2.5L6 2zm-2 3.5h8l-.6 8.2A1.5 1.5 0 0 1 9.9 15H6.1a1.5 1.5 0 0 1-1.5-1.3L4 5.5zm2.2 1.5-.3 5h1.2l.3-5H6.2zm2.4 0-.3 5h1.2l.3-5H8.6z"/>
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
