@@ -827,7 +827,7 @@ textarea {
 }
 
 .tiles-size-row .dmt-field input {
-  flex: 0 0 6em;
+  flex: none;
   width: 6em;
   min-width: 6em;
   max-width: 6em;
@@ -853,7 +853,7 @@ textarea {
 }
 
 .dmt-row.tiles-row-with-clear .dmt-field input {
-  flex: 0 0 6em;
+  flex: none;
   width: 6em;
   min-width: 6em;
   max-width: 6em;
@@ -862,7 +862,7 @@ textarea {
 .dmt-row.tiles-row-with-clear .tiles-row-clear {
   flex: 0 0 auto;
   align-self: flex-end;
-  margin-left: 0;
+  margin-left: 2px;
   padding: 0;
 }
 
@@ -899,7 +899,7 @@ textarea {
 
 .tiles-app .tiles-size-row .dmt-field input,
 .tiles-app .dmt-row.tiles-row-with-clear .dmt-field input {
-  flex: 0 0 6em;
+  flex: none;
   width: 6em;
   min-width: 6em;
   max-width: 6em;
@@ -912,13 +912,13 @@ textarea {
 
 .tiles-app .dmt-row.tiles-row-with-clear .tiles-row-clear {
   flex: 0 0 auto;
-  margin-left: 0;
+  margin-left: 2px;
   padding: 0;
 }
 
 .tiles-app .dmt-row.tiles-row-with-clear .tiles-row-clear .tiles-remove-btn {
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 1.5rem;
+  height: 1.5rem;
   padding: 0;
 }
 
