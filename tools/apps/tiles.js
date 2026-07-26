@@ -1,5 +1,5 @@
-import { t } from '../i18n.js?v=32';
-import { API_BASE, fetchJson } from '../config.js?v=37';
+import { t } from '../i18n.js';
+import { API_BASE, fetchJson } from '../config.js';
 
 const LIST_KEY = 'tools-tiles-list';
 const FORM_KEY = 'tools-tiles-form';

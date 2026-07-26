@@ -1,5 +1,5 @@
-import { t } from '../i18n.js?v=33';
-import { API_BASE, fetchJson } from '../config.js?v=37';
+import { t } from '../i18n.js';
+import { API_BASE, fetchJson } from '../config.js';
 
 const YEAR_MIN = 1970;
 const YEAR_MAX = 2100;
