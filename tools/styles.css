@@ -1266,3 +1266,95 @@ textarea {
   color: var(--dmt-preview-text);
   background: var(--dmt-preview-bg);
 }
+
+/* Watchlist tools */
+.wl-file-btn {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.wl-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--dmt-text);
+  font-family: var(--tp-font);
+  font-size: var(--tp-font-size);
+  user-select: none;
+}
+
+.wl-check-block {
+  display: flex;
+  margin-top: 10px;
+}
+
+.wl-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 10px 16px;
+  margin-top: 12px;
+}
+
+.wl-summary-grid .wl-meta {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.wl-meta {
+  color: var(--dmt-text-muted);
+  margin-right: 8px;
+}
+
+.wl-title-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  max-height: 22rem;
+  overflow: auto;
+}
+
+.wl-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: baseline;
+  border: 1px solid var(--dmt-panel-border);
+  padding: 8px 10px;
+}
+
+.wl-title-name {
+  color: var(--dmt-text);
+}
+
+.wl-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.wl-slot {
+  border: 1px dashed var(--dmt-panel-border);
+  padding: 12px;
+}
+
+.wl-slot-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  color: var(--dmt-accent);
+}
+
+.wl-view-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.wl-tab-active {
+  outline: 2px solid var(--dmt-accent);
+  outline-offset: 1px;
+}

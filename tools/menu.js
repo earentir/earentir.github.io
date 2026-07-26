@@ -42,6 +42,25 @@ function buildMenuModel() {
       action: () => navigate('tiles'),
     },
     {
+      id: 'watchlist',
+      accel: 'w',
+      labelKey: 'menuWatchlist',
+      items: [
+        {
+          id: 'wl-sync',
+          accel: 's',
+          labelKey: 'menuWatchlistSync',
+          action: () => navigate('wl-sync'),
+        },
+        {
+          id: 'wl-compare',
+          accel: 'c',
+          labelKey: 'menuWatchlistCompare',
+          action: () => navigate('wl-compare'),
+        },
+      ],
+    },
+    {
       id: 'options',
       accel: 'o',
       labelKey: 'menuOptions',
