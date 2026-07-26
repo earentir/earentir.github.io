@@ -457,7 +457,7 @@ textarea {
   grid-template-columns: 1fr 1fr;
   gap: 20px;
   margin-bottom: 20px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .dmt-datetime-row > .dmt-panel {
@@ -465,12 +465,9 @@ textarea {
   min-width: 0;
 }
 
-.dmt-datetime-row > .dmt-panel:not(.open) {
-  padding-bottom: 12px;
-}
-
-.dmt-datetime-row > .dmt-panel:not(.open) .tiles-fold-toggle .dmt-panel-title {
-  margin-bottom: 0;
+/* Don't stretch a compacted fold to match its open neighbor */
+.dmt-datetime-row:has(> .dmt-panel:not(.open)) {
+  align-items: start;
 }
 
 @media (max-width: 760px) {
