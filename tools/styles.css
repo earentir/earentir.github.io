@@ -346,10 +346,11 @@ textarea {
 }
 
 .tp-workspace {
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   background: var(--dmt-bg);
   position: relative;
   z-index: 1;
+  min-height: 0;
 }
 
 [data-desktop='shadow'] .tp-workspace {
@@ -424,11 +425,19 @@ textarea {
   position: relative;
   max-width: 1040px;
   margin: 0 auto;
-  padding: 32px 20px 24px 72px;
+  padding: 32px 20px 16px 72px;
 }
 
 .dmt-header {
-  display: contents;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* Title is absolute; collapse the header when it only holds the spine title */
+.dmt-header:not(:has(p)) {
+  height: 0;
+  overflow: visible;
 }
 
 .dmt-header h1 {
@@ -444,6 +453,7 @@ textarea {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   transform-origin: center center;
+  pointer-events: none;
 }
 
 .dmt-header p {
@@ -482,6 +492,8 @@ textarea {
 
   .dmt-header {
     display: block;
+    height: auto;
+    overflow: visible;
     margin-bottom: 28px;
   }
 
@@ -515,6 +527,12 @@ textarea {
   padding: 20px;
   margin-bottom: 20px;
   transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.dmt-app > .dmt-panel:last-child,
+.dmt-app > .dmt-panel-row:last-child,
+.dmt-app > .dmt-hint:last-child {
+  margin-bottom: 0;
 }
 
 .dmt-panel-title {
