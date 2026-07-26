@@ -835,8 +835,15 @@ textarea {
 
 .dmt-panel-row .tiles-size-row,
 .dmt-panel-row .dmt-row.tiles-row-with-clear {
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: flex-end;
+}
+
+.dmt-panel-row .dmt-row.tiles-row-with-clear .dmt-field input {
+  flex: none;
+  width: 5.5em;
+  min-width: 5.5em;
+  max-width: 5.5em;
 }
 
 .dmt-row.tiles-row-with-clear {
@@ -903,6 +910,16 @@ textarea {
   width: 6em;
   min-width: 6em;
   max-width: 6em;
+}
+
+.tiles-app .dmt-panel-row .dmt-row.tiles-row-with-clear .dmt-field input {
+  width: 5.5em;
+  min-width: 5.5em;
+  max-width: 5.5em;
+}
+
+.tiles-app .dmt-panel-row .dmt-row.tiles-row-with-clear {
+  flex-wrap: nowrap;
 }
 
 .tiles-app .dmt-row.tiles-row-with-clear {
