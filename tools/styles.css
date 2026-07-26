@@ -789,6 +789,16 @@ textarea {
   gap: 10px;
 }
 
+.tiles-app .dmt-panel-row .dmt-field {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.tiles-app .dmt-panel-row .dmt-field label {
+  min-width: 0;
+}
+
 .tiles-size-row {
   flex-wrap: wrap;
   align-items: center;
