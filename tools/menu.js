@@ -116,7 +116,51 @@ function buildMenuModel() {
 }
 
 function showAbout() {
-  window.alert(`${t('aboutTitle')}\n\n${t('aboutBody')}`);
+  if (document.getElementById('tp-about')) {
+    return;
+  }
+
+  const overlay = document.createElement('div');
+  overlay.id = 'tp-about';
+  overlay.className = 'tp-modal-overlay';
+  overlay.setAttribute('role', 'presentation');
+  overlay.innerHTML = `
+    <div class="tp-modal" role="dialog" aria-modal="true" aria-labelledby="tp-about-title">
+      <div class="tp-modal-titlebar">
+        <span class="tp-modal-title" id="tp-about-title">${t('aboutTitle')}</span>
+      </div>
+      <div class="tp-modal-body">
+        <p class="tp-modal-lead">${t('aboutBody')}</p>
+        <p class="tp-modal-detail">${t('aboutDetail')}</p>
+        <div class="tp-modal-actions">
+          <button type="button" class="tp-modal-btn" id="tp-about-ok">${t('aboutOk')}</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const close = () => {
+    document.removeEventListener('keydown', onKey);
+    overlay.remove();
+  };
+
+  const onKey = (event) => {
+    if (event.key === 'Escape' || event.key === 'Enter') {
+      event.preventDefault();
+      event.stopPropagation();
+      close();
+    }
+  };
+
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay) {
+      close();
+    }
+  });
+  overlay.querySelector('#tp-about-ok')?.addEventListener('click', close);
+  document.addEventListener('keydown', onKey, true);
+  document.body.append(overlay);
+  overlay.querySelector('#tp-about-ok')?.focus();
 }
 
 export function initMenu() {

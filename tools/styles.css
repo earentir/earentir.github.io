@@ -345,6 +345,86 @@ textarea {
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
 }
 
+.tp-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.tp-modal {
+  width: min(100%, 28rem);
+  background: var(--tp-drop-bg);
+  color: var(--tp-drop-text);
+  border: 1px solid var(--tp-drop-border);
+  box-shadow: 8px 8px 0 var(--tp-drop-shadow);
+  font-family: var(--tp-font);
+  font-size: var(--tp-font-size);
+  line-height: 1.4;
+}
+
+.tp-modal-titlebar {
+  display: flex;
+  align-items: center;
+  background: var(--tp-active-bg);
+  color: var(--tp-active-text);
+  padding: 6px 10px;
+  user-select: none;
+}
+
+.tp-modal-title {
+  font-weight: normal;
+  letter-spacing: 0.02em;
+}
+
+.tp-modal-body {
+  padding: 18px 18px 16px;
+}
+
+.tp-modal-lead {
+  margin: 0 0 10px;
+  color: var(--tp-drop-text);
+}
+
+.tp-modal-detail {
+  margin: 0 0 18px;
+  color: #000080;
+}
+
+.tp-modal-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.tp-modal-btn {
+  appearance: none;
+  min-width: 5.5rem;
+  background: var(--tp-drop-bg);
+  color: var(--tp-drop-text);
+  border: 1px solid #000;
+  box-shadow: inset -1px -1px 0 #808080, inset 1px 1px 0 #fff;
+  font-family: var(--tp-font);
+  font-size: var(--tp-font-size);
+  padding: 6px 18px;
+  cursor: pointer;
+}
+
+.tp-modal-btn:hover,
+.tp-modal-btn:focus-visible {
+  background: var(--tp-active-bg);
+  color: var(--tp-active-text);
+  outline: none;
+  box-shadow: none;
+}
+
+.tp-modal-btn:active {
+  box-shadow: inset 1px 1px 0 #808080, inset -1px -1px 0 #fff;
+}
+
 .tp-workspace {
   flex: 1 1 auto;
   background: var(--dmt-bg);
