@@ -949,7 +949,6 @@ function renderShell() {
     <div class="dmt-app tiles-app">
       <header class="dmt-header">
         <h1>${t('tilesTitle')}</h1>
-        <p>${t('tilesBody')}</p>
       </header>
 
       <section class="dmt-panel tiles-fold${foldOpen('tiles') ? ' open' : ''}" data-fold="tiles">
