@@ -201,7 +201,6 @@ function render() {
     <div class="dmt-app">
       <header class="dmt-header">
         <h1>${t('wlCompareTitle')}</h1>
-        <p>${t('wlCompareBody')}</p>
       </header>
 
       <section class="dmt-panel tiles-fold${foldOpen('lists') ? ' open' : ''}" data-fold="lists">

@@ -148,7 +148,6 @@ function render() {
     <div class="dmt-app">
       <header class="dmt-header">
         <h1>${t('wlSyncTitle')}</h1>
-        <p>${t('wlSyncBody')}</p>
       </header>
 
       <section class="dmt-panel tiles-fold${foldOpen('source') ? ' open' : ''}" data-fold="source">
