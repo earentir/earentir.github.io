@@ -1051,6 +1051,10 @@ textarea {
   flex-shrink: 0;
 }
 
+.tiles-cover-svg-tight {
+  shape-rendering: crispEdges;
+}
+
 .tiles-cover-full {
   fill: var(--dmt-accent);
 }

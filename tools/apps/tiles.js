@@ -542,17 +542,21 @@ function renderCoverageGraph(tileW, tileH, spaceW, spaceH, { maxW = 360, maxH = 
   const svgW = Math.max(1, Math.round(spaceW * scale));
   const svgH = Math.max(1, Math.round(spaceH * scale));
   const gap = tileGap ? Math.min(1.5, Math.max(0.5, scale)) : 0;
+  // When gap is off, overlap neighbors a hair so AA seams don't show the panel background.
+  const seamFix = tileGap ? 0 : 0.75;
 
   const rects = cells.map((cell) => {
-    const rw = Math.max(0.75, cell.w * scale - gap);
-    const rh = Math.max(0.75, cell.h * scale - gap);
+    const x = cell.x * scale;
+    const y = cell.y * scale;
+    const rw = Math.max(0.75, cell.w * scale - gap + seamFix);
+    const rh = Math.max(0.75, cell.h * scale - gap + seamFix);
     const cls = cell.cut ? 'tiles-cover-cut' : 'tiles-cover-full';
-    return `<rect class="${cls}" x="${(cell.x * scale).toFixed(2)}" y="${(cell.y * scale).toFixed(2)}" width="${rw.toFixed(2)}" height="${rh.toFixed(2)}" />`;
+    return `<rect class="${cls}" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${rw.toFixed(2)}" height="${rh.toFixed(2)}" />`;
   }).join('');
 
   return `
     <div class="tiles-cover-wrap" style="width:${svgW}px;height:${svgH}px" title="${attrValue(`${spaceW}×${spaceH}`)}">
-      <svg class="tiles-cover-svg" viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}" aria-hidden="true" focusable="false">${rects}</svg>
+      <svg class="tiles-cover-svg${tileGap ? '' : ' tiles-cover-svg-tight'}" viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}" aria-hidden="true" focusable="false">${rects}</svg>
     </div>
   `;
 }
