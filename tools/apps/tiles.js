@@ -221,7 +221,7 @@ function formatCuts(cuts) {
   if (!cuts?.length) {
     return t('tilesNone');
   }
-  return cuts.map((cut) => `${cut.size}×${cut.count}`).join(', ');
+  return cuts.map((cut) => `${cut.size} x${cut.count}`).join(', ');
 }
 
 function parseCutSize(size) {
@@ -846,7 +846,7 @@ function renderCoverageLayouts() {
   const summaryCells = [
     { label: t('tilesTiles'), value: String(pattern.total_tiles) },
     { label: t('tilesFull'), value: String(pattern.full_tiles) },
-    { label: t('tilesCuts'), value: formatCuts(pattern.cuts) },
+    { label: t('tilesCuts'), value: formatCuts(pattern.cuts), wrap: true },
     { label: t('tilesColArea'), value: coverageM2(lastCoverage.space_area_m2) },
   ];
   if (patternPricing) {
@@ -862,12 +862,12 @@ function renderCoverageLayouts() {
       <table class="tiles-summary-table">
         <thead>
           <tr>
-            ${summaryCells.map((cell) => `<th>${cell.label}</th>`).join('')}
+            ${summaryCells.map((cell) => `<th${cell.wrap ? ' class="tiles-summary-cuts"' : ''}>${cell.label}</th>`).join('')}
           </tr>
         </thead>
         <tbody>
           <tr>
-            ${summaryCells.map((cell) => `<td>${cell.value}</td>`).join('')}
+            ${summaryCells.map((cell) => `<td${cell.wrap ? ' class="tiles-summary-cuts"' : ''}>${cell.value}</td>`).join('')}
           </tr>
         </tbody>
       </table>
@@ -1145,7 +1145,7 @@ function renderTable(displayRows = listRows, opts = {}) {
   const line2Cells = (row) => `
     ${cell(row.totalTiles, t('tilesHelpTiles'))}
     ${cell(spaceOk && row.fullTiles != null ? row.fullTiles : '')}
-    ${cell(spaceOk && row.cutsLabel ? escapeHtml(row.cutsLabel) : '')}
+    ${cell(spaceOk && row.cutsLabel ? escapeHtml(row.cutsLabel) : '', '', 'tiles-list-cuts')}
     ${cell(coverageM2(row.areaM2))}
     ${cell(priceOk && row.costPerM2 != null ? euroSymbolN(row.costPerM2) : '')}
     ${cell(priceOk && row.totalCost != null ? euroSymbolN(row.totalCost) : '')}

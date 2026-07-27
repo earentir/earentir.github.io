@@ -1427,6 +1427,14 @@ textarea {
   white-space: nowrap;
 }
 
+.tiles-summary-table th.tiles-summary-cuts,
+.tiles-summary-table td.tiles-summary-cuts {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.35;
+}
+
 .tiles-pattern-meta {
   display: flex;
   flex-wrap: wrap;
