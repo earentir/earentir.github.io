@@ -1502,6 +1502,20 @@ textarea {
   background: color-mix(in srgb, var(--dmt-accent) 12%, transparent);
 }
 
+.tiles-list-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-top: 8px;
+  color: var(--dmt-text-muted);
+  font-family: var(--tp-font);
+  font-size: calc(var(--tp-font-size) * 0.92);
+}
+
+.tiles-list-option {
+  color: var(--dmt-accent);
+}
+
 .tiles-list-header {
   border-style: dashed;
 }

@@ -1081,22 +1081,31 @@ function isEditingListRow() {
 }
 
 function formSnapshotFields(form, withPrice) {
+  // Always re-read live DOM so switches toggled around add/update are kept.
+  const live = readForm();
+  const src = live || form;
+  const gapField = ($('#tiles-gap-cm')?.value || '').trim();
+  const skirtingField = ($('#tiles-skirting-cm')?.value || '').trim();
   return {
-    tileW: form.tileW,
-    tileH: form.tileH,
-    count: form.count,
-    spaceW: form.spaceW > 0 ? form.spaceW : null,
-    spaceH: form.spaceH > 0 ? form.spaceH : null,
-    price: withPrice ? form.price : null,
-    per: form.per || 1,
+    tileW: src.tileW,
+    tileH: src.tileH,
+    count: src.count,
+    spaceW: src.spaceW > 0 ? src.spaceW : null,
+    spaceH: src.spaceH > 0 ? src.spaceH : null,
+    price: withPrice ? src.price : null,
+    per: src.per || 1,
     pricingEnabled: Boolean(withPrice),
-    single: Boolean(form.single),
-    tileGap: Boolean(form.tileGap),
-    flatEdge: Boolean(form.flatEdge),
-    groutGap: Boolean(form.groutGap),
-    gapCm: Number.isFinite(form.gapCm) ? form.gapCm : Number(DEFAULT_FORM.gapCm),
-    skirting: Boolean(form.skirting),
-    skirtingCm: Number.isFinite(form.skirtingCm) ? form.skirtingCm : Number(DEFAULT_FORM.skirtingCm),
+    single: Boolean(src.single),
+    tileGap: Boolean(src.tileGap),
+    flatEdge: Boolean(src.flatEdge),
+    groutGap: Boolean(src.groutGap),
+    gapCm: gapField !== '' && Number.isFinite(Number(gapField))
+      ? Number(gapField)
+      : (Number.isFinite(src.gapCm) ? src.gapCm : Number(DEFAULT_FORM.gapCm)),
+    skirting: Boolean(src.skirting),
+    skirtingCm: skirtingField !== '' && Number.isFinite(Number(skirtingField))
+      ? Number(skirtingField)
+      : (Number.isFinite(src.skirtingCm) ? src.skirtingCm : Number(DEFAULT_FORM.skirtingCm)),
     selectedLayoutIndex,
   };
 }
@@ -1119,7 +1128,7 @@ function setFoldDom(foldId, open) {
   }
 }
 
-function applyListRowToForm(row) {
+function applyListRowOptions(row) {
   if (!row || !rootEl) {
     return;
   }
@@ -1138,6 +1147,45 @@ function applyListRowToForm(row) {
     }
   };
 
+  const groutOn = row.groutGap === true
+    || (row.groutGap == null && Number(row.gapCm) > 0 && Boolean(row.space));
+  const skirtingOn = row.skirting === true
+    || (row.skirting == null && Number(row.skirtingCm) > 0 && Boolean(row.space));
+  const showTiles = row.tileGap === true || groutOn;
+
+  setCheck('tiles-single', row.single === true);
+  setCheck('tiles-gap', showTiles);
+  setCheck('tiles-flat-edge', row.flatEdge === true);
+  setCheck('tiles-grout-gap', groutOn);
+  setInput(
+    'tiles-gap-cm',
+    row.gapCm != null && row.gapCm !== '' && Number(row.gapCm) >= 0
+      ? row.gapCm
+      : DEFAULT_FORM.gapCm,
+  );
+  setCheck('tiles-skirting', skirtingOn);
+  setInput(
+    'tiles-skirting-cm',
+    row.skirtingCm != null && row.skirtingCm !== '' && Number(row.skirtingCm) >= 0
+      ? row.skirtingCm
+      : DEFAULT_FORM.skirtingCm,
+  );
+  syncSpaceOnlySwitches();
+}
+
+function applyListRowToForm(row) {
+  if (!row || !rootEl) {
+    return;
+  }
+
+  const setInput = (id, value) => {
+    const el = $(`#${id}`);
+    if (!el) {
+      return;
+    }
+    el.value = value == null || Number.isNaN(value) ? '' : String(value);
+  };
+
   const orient = parseOrientation(row.orientation) || {
     w: Number(row.tileW),
     h: Number(row.tileH),
@@ -1147,12 +1195,22 @@ function applyListRowToForm(row) {
     h: Number(row.spaceH),
   };
 
+  const isCoverage = row.kind === 'coverage' || Boolean(row.space);
+
+  // Open space before restoring space-only switches so they are enabled.
+  setFoldDom('tiles', true);
+  setFoldDom('orientations', true);
+  setFoldDom('space', isCoverage);
+  const pricingOn = Boolean(row.pricingEnabled) || (row.price != null && row.price !== '');
+  setFoldDom('pricing', pricingOn);
+  setFoldDom('list', true);
+  persistFolds(readFoldsFromDom());
+
   setInput('tile-width', row.tileW ?? orient?.w);
   setInput('tile-height', row.tileH ?? orient?.h);
   setInput('tile-count', row.count ?? (row.kind === 'arrange' ? row.totalTiles : ''));
   setInput('tiles-name', row.name || '');
 
-  const isCoverage = row.kind === 'coverage' || Boolean(row.space);
   if (isCoverage && space?.w > 0 && space?.h > 0) {
     setInput('space-width', row.spaceW ?? space.w);
     setInput('space-height', row.spaceH ?? space.h);
@@ -1161,24 +1219,10 @@ function applyListRowToForm(row) {
     setInput('space-height', '');
   }
 
-  const pricingOn = Boolean(row.pricingEnabled) || (row.price != null && row.price !== '');
   setInput('tile-price', pricingOn ? (row.price ?? '') : '');
   setInput('tile-per', row.per != null ? row.per : 1);
 
-  setCheck('tiles-single', row.single);
-  setCheck('tiles-gap', row.tileGap || row.groutGap);
-  setCheck('tiles-flat-edge', row.flatEdge);
-  setCheck('tiles-grout-gap', row.groutGap);
-  setInput('tiles-gap-cm', row.gapCm != null && row.gapCm !== '' ? row.gapCm : DEFAULT_FORM.gapCm);
-  setCheck('tiles-skirting', row.skirting);
-  setInput('tiles-skirting-cm', row.skirtingCm != null && row.skirtingCm !== '' ? row.skirtingCm : DEFAULT_FORM.skirtingCm);
-
-  setFoldDom('tiles', true);
-  setFoldDom('orientations', true);
-  setFoldDom('space', isCoverage);
-  setFoldDom('pricing', pricingOn);
-  setFoldDom('list', true);
-  persistFolds(readFoldsFromDom());
+  applyListRowOptions(row);
 
   pendingOrientationSelect = orient?.w > 0 && orient?.h > 0
     ? { w: orient.w, h: orient.h }
@@ -1188,7 +1232,6 @@ function applyListRowToForm(row) {
   }
 
   saveFormState();
-  syncSpaceOnlySwitches();
 }
 
 function clearListSelection({ rerender = true } = {}) {
@@ -1211,6 +1254,16 @@ function selectListRow(id) {
   renderResults();
   enrichAndRenderTable();
   flushRefreshOrientations({ resetLayout: false });
+  // Coverage refresh can race; re-assert option switches afterwards.
+  applyListRowOptions(row);
+  saveFormState();
+  queueMicrotask(() => {
+    if (selectedListId !== id) {
+      return;
+    }
+    applyListRowOptions(row);
+    saveFormState();
+  });
 }
 
 function commitListRow(row) {
@@ -1360,6 +1413,35 @@ function renderTable(displayRows = listRows, opts = {}) {
     ${cell(priceOk && row.totalCost != null ? euroSymbolN(row.totalCost) : '')}
   `;
 
+  const optionTags = (row) => {
+    const tags = [];
+    if (row.single) {
+      tags.push(t('tilesTagSingle'));
+    }
+    if (row.tileGap) {
+      tags.push(t('tilesTagShowTiles'));
+    }
+    if (row.flatEdge) {
+      tags.push(t('tilesTagFlatEdge'));
+    }
+    if (row.groutGap) {
+      const gap = row.gapCm != null ? row.gapCm : DEFAULT_FORM.gapCm;
+      tags.push(`${t('tilesTagGrout')} ${gap}`);
+    }
+    if (row.skirting) {
+      const inset = row.skirtingCm != null ? row.skirtingCm : DEFAULT_FORM.skirtingCm;
+      tags.push(`${t('tilesTagSkirting')} ${inset}`);
+    }
+    if (!tags.length) {
+      return '';
+    }
+    return `
+      <div class="tiles-list-options">
+        ${tags.map((tag) => `<span class="tiles-list-option">${escapeHtml(tag)}</span>`).join('')}
+      </div>
+    `;
+  };
+
   host.innerHTML = `
     <div class="tiles-list">
       <div class="tiles-list-header">
@@ -1390,6 +1472,7 @@ function renderTable(displayRows = listRows, opts = {}) {
           <div class="tiles-list-line2">
             ${line2Cells(row)}
           </div>
+          ${optionTags(row)}
         </article>
       `).join('')}
       <div class="tiles-list-totals">
@@ -1682,6 +1765,13 @@ async function loadArrange() {
     }
     applyPendingOrientationSelect(lastArrange.layouts);
     refreshAllViews();
+    if (selectedListId) {
+      const selected = listRows.find((row) => row.id === selectedListId);
+      if (selected) {
+        applyListRowOptions(selected);
+        saveFormState();
+      }
+    }
   } catch (err) {
     if (seq !== arrangeSeq) {
       return;
@@ -1733,6 +1823,13 @@ async function loadCoverage() {
     }
     applyPendingOrientationSelect(lastCoverage.patterns);
     refreshAllViews();
+    if (selectedListId) {
+      const selected = listRows.find((row) => row.id === selectedListId);
+      if (selected) {
+        applyListRowOptions(selected);
+        saveFormState();
+      }
+    }
   } catch (err) {
     if (seq !== coverageSeq) {
       return;
