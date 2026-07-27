@@ -1027,42 +1027,20 @@ async function enrichAndRenderTable() {
   const spaceOk = form.spaceOpen && !validateSpace(form);
   const priceOk = pricingActive(form);
 
-  const displayRows = await Promise.all(listRows.map(async (row) => {
+  // Keep each row's saved snapshot. Only refresh live pricing from the
+  // current price/per — never rewrite older items from the active form.
+  const displayRows = listRows.map((row) => {
     const out = {
       ...row,
-      costPerM2: null,
-      totalCost: null,
+      costPerM2: row.costPerM2 ?? null,
+      totalCost: row.totalCost ?? null,
     };
     const orientation = parseOrientation(row.orientation) || {
       w: form.tileW,
       h: form.tileH,
     };
 
-    if (spaceOk) {
-      try {
-        const data = needsLocalCoverage(form)
-          ? buildLocalCoverageData(form, [orientation])
-          : await fetchCoverageCached(form, orientation);
-        const pattern = pickCoveragePattern(data, orientation);
-        if (pattern) {
-          const packed = applyFlatEdgePacking(pattern, form);
-          out.kind = 'coverage';
-          out.space = `${data.space_width_cm}×${data.space_height_cm}`;
-          out.totalTiles = packed.total_tiles;
-          out.fullTiles = packed.full_tiles;
-          out.cutsLabel = formatCuts(packed.cuts);
-          out.areaM2 = data.space_area_m2;
-          if (priceOk && packed.pricing) {
-            out.costPerM2 = packed.pricing.cost_per_m2;
-            out.totalCost = packed.pricing.total_cost;
-          }
-        }
-      } catch {
-        /* keep base row */
-      }
-    }
-
-    if (priceOk && out.costPerM2 == null) {
+    if (priceOk) {
       const priced = calcRowPricing(
         orientation.w,
         orientation.h,
@@ -1072,6 +1050,9 @@ async function enrichAndRenderTable() {
       );
       out.costPerM2 = priced.costPerM2;
       out.totalCost = priced.totalCost;
+    } else {
+      out.costPerM2 = null;
+      out.totalCost = null;
     }
 
     if (!spaceOk) {
@@ -1081,7 +1062,7 @@ async function enrichAndRenderTable() {
     }
 
     return out;
-  }));
+  });
 
   if (seq !== listEnrichSeq) {
     return;
@@ -1641,6 +1622,10 @@ async function onAddToList() {
         costPerM2: withPrice ? (pattern.pricing?.cost_per_m2 ?? null) : null,
         totalCost: withPrice ? (pattern.pricing?.total_cost ?? null) : null,
         flatEdge: Boolean(form.flatEdge),
+        groutGap: Boolean(form.groutGap),
+        gapCm: effectiveGroutGapCm(form),
+        skirting: Boolean(form.skirting),
+        skirtingCm: effectiveSkirtingCm(form),
       });
       saveList();
       enrichAndRenderTable();
