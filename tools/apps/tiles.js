@@ -24,6 +24,8 @@ const DEFAULT_FORM = {
   single: false,
   tileGap: false,
   flatEdge: false,
+  groutGap: false,
+  gapCm: '0.3',
   name: '',
   selectedLayoutIndex: 0,
   folds: { ...DEFAULT_FOLDS },
@@ -140,6 +142,10 @@ function loadFormState() {
       single: Boolean(parsed.single),
       tileGap: Boolean(parsed.tileGap),
       flatEdge: Boolean(parsed.flatEdge),
+      groutGap: Boolean(parsed.groutGap),
+      gapCm: parsed.gapCm != null && String(parsed.gapCm).trim() !== ''
+        ? String(parsed.gapCm)
+        : DEFAULT_FORM.gapCm,
       selectedLayoutIndex: Number(parsed.selectedLayoutIndex) || 0,
       folds: loadFoldsState(parsed.folds),
     };
@@ -165,6 +171,8 @@ function saveFormState() {
     single: Boolean($('#tiles-single')?.checked),
     tileGap: Boolean($('#tiles-gap')?.checked),
     flatEdge: Boolean($('#tiles-flat-edge')?.checked),
+    groutGap: Boolean($('#tiles-grout-gap')?.checked),
+    gapCm: ($('#tiles-gap-cm')?.value ?? savedForm.gapCm ?? DEFAULT_FORM.gapCm).trim() || DEFAULT_FORM.gapCm,
     name: ($('#tiles-name')?.value ?? savedForm.name).trim(),
     selectedLayoutIndex,
     folds,
@@ -209,11 +217,23 @@ function formatCuts(cuts) {
 }
 
 function parseCutSize(size) {
-  const match = String(size || '').toLowerCase().match(/^(\d+)\s*x\s*(\d+)$/);
+  const match = String(size || '').toLowerCase().match(/^(\d+(?:\.\d+)?)\s*x\s*(\d+(?:\.\d+)?)$/);
   if (!match) {
     return null;
   }
   return { w: Number(match[1]), h: Number(match[2]) };
+}
+
+function fmtDim(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) {
+    return String(value ?? '');
+  }
+  const rounded = Math.round(n * 1000) / 1000;
+  if (Number.isInteger(rounded)) {
+    return String(rounded);
+  }
+  return String(rounded);
 }
 
 /** How many WxH pieces fit in one parent tile (either rotation). */
@@ -296,6 +316,9 @@ function readForm() {
   const single = Boolean($('#tiles-single')?.checked);
   const tileGap = Boolean($('#tiles-gap')?.checked);
   const flatEdge = Boolean($('#tiles-flat-edge')?.checked);
+  const groutGap = Boolean($('#tiles-grout-gap')?.checked);
+  const gapCmRaw = ($('#tiles-gap-cm')?.value || '').trim();
+  const gapCm = gapCmRaw === '' ? Number(DEFAULT_FORM.gapCm) : Number(gapCmRaw);
   const pricingOpen = isFoldOpen('pricing');
   const spaceOpen = isFoldOpen('space');
   const tilesOpen = isFoldOpen('tiles');
@@ -315,6 +338,8 @@ function readForm() {
     single,
     tileGap,
     flatEdge,
+    groutGap,
+    gapCm,
     pricingOpen,
     spaceOpen,
     tilesOpen,
@@ -377,24 +402,35 @@ function showCalcStatus(message = '', isError = false) {
 }
 
 function refreshAllViews() {
-  syncFlatEdgeSwitch();
+  syncSpaceOnlySwitches();
   renderResults();
   enrichAndRenderTable();
   showCalcStatus();
 }
 
+function syncSpaceOnlySwitches() {
+  const spaceOk = spaceModeActive();
+  const flatInput = $('#tiles-flat-edge');
+  const flatLabel = flatInput?.closest('.tiles-switch');
+  if (flatInput) {
+    flatInput.disabled = !spaceOk;
+    flatLabel?.classList.toggle('tiles-switch-disabled', !spaceOk);
+  }
+
+  const groutInput = $('#tiles-grout-gap');
+  const groutLabel = groutInput?.closest('.tiles-switch');
+  const gapField = $('#tiles-gap-cm');
+  if (groutInput) {
+    groutInput.disabled = !spaceOk;
+    groutLabel?.classList.toggle('tiles-switch-disabled', !spaceOk);
+  }
+  if (gapField) {
+    gapField.disabled = !spaceOk || !groutInput?.checked;
+  }
+}
+
 function syncFlatEdgeSwitch() {
-  const input = $('#tiles-flat-edge');
-  const label = input?.closest('.tiles-switch');
-  if (!input) {
-    return;
-  }
-  const enabled = spaceModeActive();
-  input.disabled = !enabled;
-  label?.classList.toggle('tiles-switch-disabled', !enabled);
-  if (!enabled && input.checked) {
-    // Keep saved preference, but packing only applies in space mode.
-  }
+  syncSpaceOnlySwitches();
 }
 
 function buildOrientations(tileW, tileH, single) {
@@ -591,59 +627,128 @@ function renderGraph(layout, { maxW = 280, maxH = 80, tileGap = false } = {}) {
   `;
 }
 
-function buildCoverageCells(tileW, tileH, spaceW, spaceH) {
-  const fullCols = Math.floor(spaceW / tileW);
-  const remW = spaceW % tileW;
-  const fullRows = Math.floor(spaceH / tileH);
-  const remH = spaceH % tileH;
-  const cols = fullCols + (remW > 0 ? 1 : 0);
-  const rows = fullRows + (remH > 0 ? 1 : 0);
+function buildCoverageCells(tileW, tileH, spaceW, spaceH, gapCm = 0) {
+  const gap = gapCm > 0 ? gapCm : 0;
+  const fitAxis = (space, tile) => {
+    if (!(space > 0) || !(tile > 0)) {
+      return { full: 0, rem: 0 };
+    }
+    if (!(gap > 0)) {
+      const full = Math.floor(space / tile);
+      return { full, rem: space - full * tile };
+    }
+    const full = Math.floor((space + gap) / (tile + gap));
+    const used = full * tile + Math.max(0, full - 1) * gap;
+    const rem = Math.round((space - used) * 1000) / 1000;
+    return { full, rem: rem > 1e-9 ? rem : 0 };
+  };
+
+  const across = fitAxis(spaceW, tileW);
+  const down = fitAxis(spaceH, tileH);
+  const cols = across.full + (across.rem > 0 ? 1 : 0);
+  const rows = down.full + (down.rem > 0 ? 1 : 0);
   const cells = [];
   let y = 0;
   for (let r = 0; r < rows; r += 1) {
-    const h = (r === fullRows && remH > 0) ? remH : tileH;
+    const rowH = (r >= down.full && down.rem > 0) ? down.rem : tileH;
     let x = 0;
     for (let c = 0; c < cols; c += 1) {
-      const w = (c === fullCols && remW > 0) ? remW : tileW;
+      const colW = (c >= across.full && across.rem > 0) ? across.rem : tileW;
       cells.push({
         x,
         y,
-        w,
-        h,
-        cut: w !== tileW || h !== tileH,
+        w: colW,
+        h: rowH,
+        cut: colW !== tileW || rowH !== tileH,
       });
-      x += w;
+      x += colW + (c < cols - 1 ? gap : 0);
     }
-    y += h;
+    y += rowH + (r < rows - 1 ? gap : 0);
   }
   return cells;
 }
 
-function renderCoverageGraph(tileW, tileH, spaceW, spaceH, { maxW = 360, maxH = 180, tileGap = false } = {}) {
+function buildCoveragePattern(tileW, tileH, spaceW, spaceH, gapCm = 0, form = null) {
+  const cells = buildCoverageCells(tileW, tileH, spaceW, spaceH, gapCm);
+  let fullTiles = 0;
+  const cutsMap = new Map();
+  for (const cell of cells) {
+    if (!cell.cut) {
+      fullTiles += 1;
+      continue;
+    }
+    const key = `${fmtDim(cell.w)}x${fmtDim(cell.h)}`;
+    cutsMap.set(key, (cutsMap.get(key) || 0) + 1);
+  }
+  const cuts = [...cutsMap.entries()].map(([size, count]) => ({ size, count }));
+  const totalTiles = cells.length;
+  const pattern = {
+    tile_width_cm: tileW,
+    tile_height_cm: tileH,
+    total_tiles: totalTiles,
+    full_tiles: fullTiles,
+    cuts,
+  };
+  if (form && pricingActive(form) && form.price !== null) {
+    const priced = calcRowPricing(tileW, tileH, totalTiles, form.price, form.per || 1);
+    pattern.pricing = {
+      price: form.price,
+      per: form.per || 1,
+      tiles: totalTiles,
+      packs_needed: Math.ceil(totalTiles / Math.max(1, form.per || 1)),
+      cost_per_m2: priced.costPerM2,
+      total_cost: priced.totalCost,
+    };
+  }
+  return pattern;
+}
+
+function effectiveGroutGapCm(form = readForm()) {
+  if (!form.groutGap || !spaceModeActive(form)) {
+    return 0;
+  }
+  const gap = Number(form.gapCm);
+  return gap > 0 ? gap : 0;
+}
+
+function buildLocalCoverageData(form, orients) {
+  const gap = effectiveGroutGapCm(form);
+  const patterns = (orients?.length ? orients : [{ w: form.tileW, h: form.tileH }])
+    .map((o) => buildCoveragePattern(o.w, o.h, form.spaceW, form.spaceH, gap, form));
+  return {
+    space_width_cm: form.spaceW,
+    space_height_cm: form.spaceH,
+    space_area_m2: (form.spaceW * form.spaceH) / 10000,
+    patterns,
+    gap_cm: gap,
+  };
+}
+
+function renderCoverageGraph(tileW, tileH, spaceW, spaceH, { maxW = 360, maxH = 180, tileGap = false, gapCm = 0 } = {}) {
   if (!(tileW > 0) || !(tileH > 0) || !(spaceW > 0) || !(spaceH > 0)) {
     return '';
   }
 
-  const cells = buildCoverageCells(tileW, tileH, spaceW, spaceH);
+  const cells = buildCoverageCells(tileW, tileH, spaceW, spaceH, gapCm);
   const scale = Math.min(maxW / spaceW, maxH / spaceH, 1);
   const svgW = Math.max(1, Math.round(spaceW * scale));
   const svgH = Math.max(1, Math.round(spaceH * scale));
-  const gap = tileGap ? Math.min(1.5, Math.max(0.5, scale)) : 0;
-  // When gap is off, overlap neighbors a hair so AA seams don't show the panel background.
-  const seamFix = tileGap ? 0 : 0.75;
+  const showGap = tileGap || gapCm > 0;
+  const visualGap = showGap ? Math.min(1.5, Math.max(0.5, scale * (gapCm > 0 ? Math.max(gapCm, 0.3) : 1))) : 0;
+  const seamFix = showGap ? 0 : 0.75;
 
   const rects = cells.map((cell) => {
     const x = cell.x * scale;
     const y = cell.y * scale;
-    const rw = Math.max(0.75, cell.w * scale - gap + seamFix);
-    const rh = Math.max(0.75, cell.h * scale - gap + seamFix);
+    const rw = Math.max(0.75, cell.w * scale - visualGap + seamFix);
+    const rh = Math.max(0.75, cell.h * scale - visualGap + seamFix);
     const cls = cell.cut ? 'tiles-cover-cut' : 'tiles-cover-full';
     return `<rect class="${cls}" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${rw.toFixed(2)}" height="${rh.toFixed(2)}" />`;
   }).join('');
 
   return `
     <div class="tiles-cover-wrap" style="width:${svgW}px;height:${svgH}px" title="${attrValue(`${spaceW}×${spaceH}`)}">
-      <svg class="tiles-cover-svg${tileGap ? '' : ' tiles-cover-svg-tight'}" viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}" aria-hidden="true" focusable="false">${rects}</svg>
+      <svg class="tiles-cover-svg${showGap ? '' : ' tiles-cover-svg-tight'}" viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}" aria-hidden="true" focusable="false">${rects}</svg>
     </div>
   `;
 }
@@ -666,6 +771,7 @@ function renderCoverageLayouts() {
   const pricing = pricingActive(form);
   const multi = lastCoverage.patterns.length > 1;
   const tileGap = Boolean(form.tileGap);
+  const gapCm = effectiveGroutGapCm(form);
   const pattern = applyFlatEdgePacking(lastCoverage.patterns[selectedLayoutIndex], form);
   const patternPricing = pricing ? pattern?.pricing : null;
 
@@ -724,7 +830,7 @@ function renderCoverageLayouts() {
                     item.tile_height_cm,
                     lastCoverage.space_width_cm,
                     lastCoverage.space_height_cm,
-                    { tileGap },
+                    { tileGap, gapCm },
                   )}</td>
                 </tr>
               `;
@@ -866,7 +972,10 @@ async function enrichAndRenderTable() {
 
     if (spaceOk) {
       try {
-        const data = await fetchCoverageCached(form, orientation);
+        const gap = effectiveGroutGapCm(form);
+        const data = gap > 0
+          ? buildLocalCoverageData(form, [orientation])
+          : await fetchCoverageCached(form, orientation);
         const pattern = pickCoveragePattern(data, orientation);
         if (pattern) {
           const packed = applyFlatEdgePacking(pattern, form);
@@ -1131,10 +1240,10 @@ function renderShell() {
                 <span class="dmt-switch-slider"></span>
               </span>
             </label>
-            <label class="tiles-switch" title="${attrValue(t('tilesGapHelp'))}">
-              <span class="tiles-switch-label">${t('tilesGap')}</span>
+            <label class="tiles-switch" title="${attrValue(t('tilesShowTilesHelp'))}">
+              <span class="tiles-switch-label">${t('tilesShowTiles')}</span>
               <span class="dmt-switch">
-                <input type="checkbox" id="tiles-gap" role="switch" aria-label="${attrValue(t('tilesGap'))}"${form.tileGap ? ' checked' : ''}>
+                <input type="checkbox" id="tiles-gap" role="switch" aria-label="${attrValue(t('tilesShowTiles'))}"${form.tileGap ? ' checked' : ''}>
                 <span class="dmt-switch-slider"></span>
               </span>
             </label>
@@ -1145,6 +1254,19 @@ function renderShell() {
                 <span class="dmt-switch-slider"></span>
               </span>
             </label>
+          </div>
+          <div class="tiles-switch-row tiles-gap-calc-row">
+            <label class="tiles-switch${spaceModeActive(form) ? '' : ' tiles-switch-disabled'}" title="${attrValue(t('tilesGroutGapHelp'))}">
+              <span class="tiles-switch-label">${t('tilesGroutGap')}</span>
+              <span class="dmt-switch">
+                <input type="checkbox" id="tiles-grout-gap" role="switch" aria-label="${attrValue(t('tilesGroutGap'))}"${form.groutGap ? ' checked' : ''}${spaceModeActive(form) ? '' : ' disabled'}>
+                <span class="dmt-switch-slider"></span>
+              </span>
+            </label>
+            <div class="dmt-field tiles-gap-cm-field">
+              <label for="tiles-gap-cm">${t('tilesGapCm')}</label>
+              <input type="number" id="tiles-gap-cm" min="0" step="0.1" value="${attrValue(form.gapCm ?? DEFAULT_FORM.gapCm)}"${spaceModeActive(form) && form.groutGap ? '' : ' disabled'}>
+            </div>
           </div>
           <div id="tiles-results"></div>
         </div>
@@ -1311,7 +1433,10 @@ async function loadCoverage() {
   const seq = ++coverageSeq;
   showCalcStatus('…');
   try {
-    const data = await fetchCoverageCached(form, orientation);
+    const gap = effectiveGroutGapCm(form);
+    const data = gap > 0
+      ? buildLocalCoverageData(form, orientations)
+      : await fetchCoverageCached(form, orientation);
     if (seq !== coverageSeq) {
       return;
     }
@@ -1405,13 +1530,16 @@ async function onAddToList() {
     const seq = ++addSeq;
     showCalcStatus('…');
     try {
-      const data = lastCoverage && coveragePattern
+      const gap = effectiveGroutGapCm(form);
+      const data = lastCoverage && coveragePattern && gap === (lastCoverage.gap_cm || 0)
         ? lastCoverage
-        : await fetchCoverage(form, orientation);
+        : gap > 0
+          ? buildLocalCoverageData(form, [orientation])
+          : await fetchCoverage(form, orientation);
       if (seq !== addSeq) {
         return;
       }
-      const pattern = (lastCoverage && coveragePattern)
+      const pattern = (lastCoverage && coveragePattern && data === lastCoverage)
         ? applyFlatEdgePacking(coveragePattern, form)
         : applyFlatEdgePacking(pickCoveragePattern(data, orientation) || data.patterns?.[0], form);
       if (!pattern) {
@@ -1485,6 +1613,31 @@ function bindEvents() {
     renderResults();
     enrichAndRenderTable();
   };
+  const enableShowIndividualTiles = () => {
+    const show = $('#tiles-gap');
+    if (show && !show.checked) {
+      show.checked = true;
+    }
+  };
+  const onGroutGapChange = () => {
+    const groutOn = Boolean($('#tiles-grout-gap')?.checked);
+    if (groutOn) {
+      enableShowIndividualTiles();
+    }
+    const gapField = $('#tiles-gap-cm');
+    if (gapField) {
+      gapField.disabled = !spaceModeActive() || !groutOn;
+    }
+    saveFormState();
+    flushRefreshOrientations({ resetLayout: false });
+  };
+  const onGapCmInput = () => {
+    if ($('#tiles-grout-gap')?.checked) {
+      enableShowIndividualTiles();
+    }
+    saveFormState();
+    scheduleRefreshOrientations({ resetLayout: false });
+  };
   const orientationInputs = $all('#tile-width, #tile-height, #tile-count, #tiles-single, #tile-price, #tile-per');
   orientationInputs.forEach((el) => {
     el.addEventListener('input', onOrientationInput);
@@ -1504,6 +1657,18 @@ function bindEvents() {
   const flatEdgeInput = $('#tiles-flat-edge');
   flatEdgeInput?.addEventListener('change', onFlatEdgeChange);
   cleanup.push(() => flatEdgeInput?.removeEventListener('change', onFlatEdgeChange));
+
+  const groutGapInput = $('#tiles-grout-gap');
+  groutGapInput?.addEventListener('change', onGroutGapChange);
+  cleanup.push(() => groutGapInput?.removeEventListener('change', onGroutGapChange));
+
+  const gapCmInput = $('#tiles-gap-cm');
+  gapCmInput?.addEventListener('input', onGapCmInput);
+  gapCmInput?.addEventListener('change', onGapCmInput);
+  cleanup.push(() => {
+    gapCmInput?.removeEventListener('input', onGapCmInput);
+    gapCmInput?.removeEventListener('change', onGapCmInput);
+  });
 
   const onSpaceInput = () => {
     coverageCache.clear();

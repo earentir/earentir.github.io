@@ -1323,6 +1323,20 @@ textarea {
   cursor: not-allowed;
 }
 
+.tiles-gap-calc-row {
+  margin-top: 4px;
+}
+
+.tiles-gap-cm-field {
+  min-width: 7rem;
+  max-width: 9rem;
+}
+
+.tiles-gap-cm-field input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .tiles-switch-label {
   font-family: var(--tp-font);
   font-size: var(--tp-font-size);
