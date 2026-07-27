@@ -108,7 +108,7 @@ function buildMenuModel() {
       id: 'api',
       accel: 'a',
       labelKey: 'menuApi',
-      action: () => showApiDocs(),
+      action: () => navigate('api'),
     },
     {
       id: 'help',
@@ -119,56 +119,6 @@ function buildMenuModel() {
       ],
     },
   ];
-}
-
-const API_DOCS_URL = 'https://api.earentir.dev/doc/';
-
-function showApiDocs() {
-  if (document.getElementById('tp-api-docs')) {
-    return;
-  }
-
-  const overlay = document.createElement('div');
-  overlay.id = 'tp-api-docs';
-  overlay.className = 'tp-modal-overlay';
-  overlay.setAttribute('role', 'presentation');
-  overlay.innerHTML = `
-    <div class="tp-modal tp-modal-docs" role="dialog" aria-modal="true" aria-labelledby="tp-api-docs-title">
-      <div class="tp-modal-titlebar">
-        <span class="tp-modal-title" id="tp-api-docs-title">${t('apiDocsTitle')}</span>
-        <div class="tp-modal-title-actions">
-          <a class="tp-modal-title-link" href="${API_DOCS_URL}" target="_blank" rel="noopener noreferrer">${t('apiDocsOpen')}</a>
-          <button type="button" class="tp-modal-title-btn" id="tp-api-docs-close" aria-label="${t('apiDocsClose')}">×</button>
-        </div>
-      </div>
-      <div class="tp-modal-docs-body">
-        <iframe class="tp-modal-docs-frame" src="${API_DOCS_URL}" title="${t('apiDocsTitle')}" loading="lazy"></iframe>
-      </div>
-    </div>
-  `;
-
-  const close = () => {
-    document.removeEventListener('keydown', onKey, true);
-    overlay.remove();
-  };
-
-  const onKey = (event) => {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      event.stopPropagation();
-      close();
-    }
-  };
-
-  overlay.addEventListener('click', (event) => {
-    if (event.target === overlay) {
-      close();
-    }
-  });
-  overlay.querySelector('#tp-api-docs-close')?.addEventListener('click', close);
-  document.addEventListener('keydown', onKey, true);
-  document.body.append(overlay);
-  overlay.querySelector('#tp-api-docs-close')?.focus();
 }
 
 function showAbout() {

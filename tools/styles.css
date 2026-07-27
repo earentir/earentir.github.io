@@ -370,8 +370,6 @@ textarea {
 .tp-modal-titlebar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
   background: var(--tp-active-bg);
   color: var(--tp-active-text);
   padding: 6px 10px;
@@ -427,76 +425,37 @@ textarea {
   box-shadow: inset 1px 1px 0 #808080, inset -1px -1px 0 #fff;
 }
 
-.tp-modal-title-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: auto;
-}
-
-.tp-modal-title-link {
-  color: var(--tp-active-text);
-  text-decoration: underline;
-  font-family: var(--tp-font);
-  font-size: var(--tp-font-size);
-}
-
-.tp-modal-title-link:hover {
-  color: #ffaa00;
-}
-
-.tp-modal-title-btn {
-  appearance: none;
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--tp-active-text);
-  font-family: var(--tp-font);
-  font-size: 18px;
-  line-height: 1;
-  width: 1.6rem;
-  height: 1.6rem;
-  padding: 0;
-  cursor: pointer;
-}
-
-.tp-modal-title-btn:hover,
-.tp-modal-title-btn:focus-visible {
-  border-color: var(--tp-active-text);
-  outline: none;
-}
-
-.tp-modal-docs {
-  width: min(96vw, 72rem);
-  height: min(90vh, 52rem);
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-}
-
-.tp-modal-docs .tp-modal-titlebar {
-  flex-shrink: 0;
-}
-
-.tp-modal-docs-body {
-  flex: 1 1 auto;
-  min-height: 0;
-  background: #fff;
-}
-
-.tp-modal-docs-frame {
-  display: block;
-  width: 100%;
-  height: 100%;
-  border: 0;
-  background: #fff;
-}
-
 .tp-workspace {
   flex: 1 1 auto;
   background: var(--dmt-bg);
   position: relative;
   z-index: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+#tool-root {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.api-docs-app {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--dmt-bg);
+}
+
+.api-docs-frame {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  border: 0;
+  background: #fff;
 }
 
 [data-desktop='shadow'] .tp-workspace {

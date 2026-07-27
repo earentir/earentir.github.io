@@ -31,6 +31,12 @@ export const tools = {
     load: () => import('./apps/wl-compare.js?v=52'),
     titleKey: 'wlCompareTitle',
   },
+  api: {
+    id: 'api',
+    path: '/tools/api',
+    load: () => import('./apps/api-docs.js?v=1'),
+    titleKey: 'apiDocsTitle',
+  },
 };
 
 export function getToolById(id) {
