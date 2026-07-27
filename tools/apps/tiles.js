@@ -1225,7 +1225,8 @@ function commitListRow(row) {
     }
   }
   listRows.push(next);
-  selectedListId = next.id;
+  // New rows leave add-mode active; selection is only from clicking a list item.
+  selectedListId = null;
   saveList();
   return next;
 }
