@@ -1337,8 +1337,14 @@ textarea {
 }
 
 .tiles-gap-cm-field {
-  min-width: 7rem;
-  max-width: 9rem;
+  min-width: 11rem;
+  max-width: 14rem;
+  flex: 0 1 14rem;
+}
+
+.tiles-gap-cm-field input {
+  width: 100%;
+  min-width: 0;
 }
 
 .tiles-gap-cm-field input:disabled {
