@@ -38,6 +38,8 @@ let cleanup = [];
 let orientations = [];
 let selectedLayoutIndex = 0;
 let listRows = [];
+let selectedListId = null;
+let pendingOrientationSelect = null;
 let savedForm = {
   ...DEFAULT_FORM,
   folds: { ...DEFAULT_FOLDS },
@@ -124,6 +126,15 @@ function loadList() {
   } catch {
     listRows = [];
   }
+  listRows = listRows.map((row, index) => {
+    if (row?.id) {
+      return row;
+    }
+    return {
+      ...row,
+      id: `legacy-${index}-${Date.now().toString(16)}`,
+    };
+  });
 }
 
 function saveList() {
@@ -1039,7 +1050,7 @@ function renderResults() {
         <label for="tiles-name">${t('tilesName')}</label>
         <input type="text" id="tiles-name" placeholder="${t('tilesNamePlaceholder')}" autocomplete="off" value="${escapeHtml(readNameValue())}">
       </div>
-      <button type="button" class="dmt-btn" id="tiles-add-btn">${t('tilesAddToList')}</button>
+      <button type="button" class="dmt-btn" id="tiles-add-btn">${isEditingListRow() ? t('tilesUpdateList') : t('tilesAddToList')}</button>
     </div>
   `;
 }
@@ -1063,6 +1074,175 @@ function snapshotListRow(row) {
   } catch {
     return JSON.parse(JSON.stringify(row));
   }
+}
+
+function isEditingListRow() {
+  return Boolean(selectedListId && listRows.some((row) => row.id === selectedListId));
+}
+
+function formSnapshotFields(form, withPrice) {
+  return {
+    tileW: form.tileW,
+    tileH: form.tileH,
+    count: form.count,
+    spaceW: form.spaceW > 0 ? form.spaceW : null,
+    spaceH: form.spaceH > 0 ? form.spaceH : null,
+    price: withPrice ? form.price : null,
+    per: form.per || 1,
+    pricingEnabled: Boolean(withPrice),
+    single: Boolean(form.single),
+    tileGap: Boolean(form.tileGap),
+    flatEdge: Boolean(form.flatEdge),
+    groutGap: Boolean(form.groutGap),
+    gapCm: Number.isFinite(form.gapCm) ? form.gapCm : Number(DEFAULT_FORM.gapCm),
+    skirting: Boolean(form.skirting),
+    skirtingCm: Number.isFinite(form.skirtingCm) ? form.skirtingCm : Number(DEFAULT_FORM.skirtingCm),
+    selectedLayoutIndex,
+  };
+}
+
+function setFoldDom(foldId, open) {
+  const fold = rootEl?.querySelector(`.tiles-fold[data-fold="${foldId}"]`);
+  if (!fold) {
+    return;
+  }
+  const toggle = fold.querySelector('.tiles-fold-toggle');
+  const body = fold.querySelector('.tiles-fold-body');
+  const icon = toggle?.querySelector('.tiles-fold-icon');
+  fold.classList.toggle('open', open);
+  if (body) {
+    body.hidden = !open;
+  }
+  toggle?.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (icon) {
+    icon.textContent = open ? '▼' : '▶';
+  }
+}
+
+function applyListRowToForm(row) {
+  if (!row || !rootEl) {
+    return;
+  }
+
+  const setInput = (id, value) => {
+    const el = $(`#${id}`);
+    if (!el) {
+      return;
+    }
+    el.value = value == null || Number.isNaN(value) ? '' : String(value);
+  };
+  const setCheck = (id, on) => {
+    const el = $(`#${id}`);
+    if (el) {
+      el.checked = Boolean(on);
+    }
+  };
+
+  const orient = parseOrientation(row.orientation) || {
+    w: Number(row.tileW),
+    h: Number(row.tileH),
+  };
+  const space = parseOrientation(row.space) || {
+    w: Number(row.spaceW),
+    h: Number(row.spaceH),
+  };
+
+  setInput('tile-width', row.tileW ?? orient?.w);
+  setInput('tile-height', row.tileH ?? orient?.h);
+  setInput('tile-count', row.count ?? (row.kind === 'arrange' ? row.totalTiles : ''));
+  setInput('tiles-name', row.name || '');
+
+  const isCoverage = row.kind === 'coverage' || Boolean(row.space);
+  if (isCoverage && space?.w > 0 && space?.h > 0) {
+    setInput('space-width', row.spaceW ?? space.w);
+    setInput('space-height', row.spaceH ?? space.h);
+  } else {
+    setInput('space-width', '');
+    setInput('space-height', '');
+  }
+
+  const pricingOn = Boolean(row.pricingEnabled) || (row.price != null && row.price !== '');
+  setInput('tile-price', pricingOn ? (row.price ?? '') : '');
+  setInput('tile-per', row.per != null ? row.per : 1);
+
+  setCheck('tiles-single', row.single);
+  setCheck('tiles-gap', row.tileGap || row.groutGap);
+  setCheck('tiles-flat-edge', row.flatEdge);
+  setCheck('tiles-grout-gap', row.groutGap);
+  setInput('tiles-gap-cm', row.gapCm != null && row.gapCm !== '' ? row.gapCm : DEFAULT_FORM.gapCm);
+  setCheck('tiles-skirting', row.skirting);
+  setInput('tiles-skirting-cm', row.skirtingCm != null && row.skirtingCm !== '' ? row.skirtingCm : DEFAULT_FORM.skirtingCm);
+
+  setFoldDom('tiles', true);
+  setFoldDom('orientations', true);
+  setFoldDom('space', isCoverage);
+  setFoldDom('pricing', pricingOn);
+  setFoldDom('list', true);
+  persistFolds(readFoldsFromDom());
+
+  pendingOrientationSelect = orient?.w > 0 && orient?.h > 0
+    ? { w: orient.w, h: orient.h }
+    : null;
+  if (Number.isInteger(row.selectedLayoutIndex) && row.selectedLayoutIndex >= 0) {
+    selectedLayoutIndex = row.selectedLayoutIndex;
+  }
+
+  saveFormState();
+  syncSpaceOnlySwitches();
+}
+
+function clearListSelection({ rerender = true } = {}) {
+  selectedListId = null;
+  pendingOrientationSelect = null;
+  if (rerender) {
+    renderResults();
+    enrichAndRenderTable();
+  }
+}
+
+function selectListRow(id) {
+  const row = listRows.find((item) => item.id === id);
+  if (!row) {
+    clearListSelection();
+    return;
+  }
+  selectedListId = id;
+  applyListRowToForm(row);
+  renderResults();
+  enrichAndRenderTable();
+  flushRefreshOrientations({ resetLayout: false });
+}
+
+function commitListRow(row) {
+  const next = snapshotListRow(row);
+  if (isEditingListRow()) {
+    const index = listRows.findIndex((item) => item.id === selectedListId);
+    if (index >= 0) {
+      next.id = selectedListId;
+      listRows[index] = next;
+      saveList();
+      return next;
+    }
+  }
+  listRows.push(next);
+  selectedListId = next.id;
+  saveList();
+  return next;
+}
+
+function applyPendingOrientationSelect(patterns) {
+  if (!pendingOrientationSelect || !patterns?.length) {
+    return;
+  }
+  const { w, h } = pendingOrientationSelect;
+  const bySize = patterns.findIndex((pattern) => (
+    Number(pattern.tile_width_cm ?? pattern.tileW) === Number(w)
+    && Number(pattern.tile_height_cm ?? pattern.tileH) === Number(h)
+  ));
+  if (bySize >= 0) {
+    selectedLayoutIndex = bySize;
+  }
+  pendingOrientationSelect = null;
 }
 
 function enrichAndRenderTable() {
@@ -1193,7 +1373,7 @@ function renderTable(displayRows = listRows, opts = {}) {
         </div>
       </div>
       ${displayRows.map((row, index) => `
-        <article class="tiles-list-row">
+        <article class="tiles-list-row${row.id && row.id === selectedListId ? ' selected' : ''}" data-list-id="${attrValue(row.id || '')}" tabindex="0" role="button" aria-pressed="${row.id && row.id === selectedListId ? 'true' : 'false'}">
           <div class="tiles-list-line1">
             ${cell(escapeHtml(row.name || t('tilesNone')), '', 'tiles-list-name')}
             ${cell(escapeHtml(row.orientation))}
@@ -1499,6 +1679,7 @@ async function loadArrange() {
     if (selectedLayoutIndex >= (lastArrange.layouts?.length || 0)) {
       selectedLayoutIndex = 0;
     }
+    applyPendingOrientationSelect(lastArrange.layouts);
     refreshAllViews();
   } catch (err) {
     if (seq !== arrangeSeq) {
@@ -1549,6 +1730,7 @@ async function loadCoverage() {
     if (selectedLayoutIndex >= (lastCoverage.patterns?.length || 0)) {
       selectedLayoutIndex = 0;
     }
+    applyPendingOrientationSelect(lastCoverage.patterns);
     refreshAllViews();
   } catch (err) {
     if (seq !== coverageSeq) {
@@ -1656,7 +1838,7 @@ async function onAddToList() {
         return;
       }
 
-      listRows.push(snapshotListRow({
+      commitListRow({
         id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
         kind: 'coverage',
         name: form.name,
@@ -1669,13 +1851,8 @@ async function onAddToList() {
         areaM2: data.space_area_m2,
         costPerM2: withPrice ? (pattern.pricing?.cost_per_m2 ?? null) : null,
         totalCost: withPrice ? (pattern.pricing?.total_cost ?? null) : null,
-        flatEdge: Boolean(form.flatEdge),
-        groutGap: Boolean(form.groutGap),
-        gapCm: effectiveGroutGapCm(form),
-        skirting: Boolean(form.skirting),
-        skirtingCm: effectiveSkirtingCm(form),
-      }));
-      saveList();
+        ...formSnapshotFields(form, withPrice),
+      });
       renderResults();
       enrichAndRenderTable();
       setFoldOpen('list', true);
@@ -1694,7 +1871,7 @@ async function onAddToList() {
   }
 
   if (layout && lastArrange) {
-    listRows.push(snapshotListRow({
+    commitListRow({
       id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
       kind: 'arrange',
       name: form.name,
@@ -1707,8 +1884,9 @@ async function onAddToList() {
       areaM2: lastArrange.total_area_m2,
       costPerM2: withPrice ? (lastArrange.pricing?.cost_per_m2 ?? null) : null,
       totalCost: withPrice ? (lastArrange.pricing?.total_cost ?? null) : null,
-    }));
-    saveList();
+      ...formSnapshotFields(form, withPrice),
+    });
+    renderResults();
     enrichAndRenderTable();
     setFoldOpen('list', true);
     showCalcStatus();
@@ -1895,7 +2073,10 @@ function bindEvents() {
   const clearBtn = $('#tiles-clear-btn');
   const onClear = () => {
     listRows = [];
+    selectedListId = null;
+    pendingOrientationSelect = null;
     saveList();
+    renderResults();
     enrichAndRenderTable();
   };
   clearBtn?.addEventListener('click', onClear);
@@ -1917,14 +2098,58 @@ function bindEvents() {
 
     const removeBtn = event.target.closest('.tiles-remove-btn');
     if (removeBtn && rootEl.contains(removeBtn)) {
+      event.preventDefault();
+      event.stopPropagation();
       const index = Number(removeBtn.dataset.index);
+      const removed = listRows[index];
       listRows.splice(index, 1);
+      if (removed?.id && removed.id === selectedListId) {
+        selectedListId = null;
+        pendingOrientationSelect = null;
+      }
       saveList();
+      renderResults();
       enrichAndRenderTable();
+      return;
+    }
+
+    const listRow = event.target.closest('.tiles-list-row[data-list-id]');
+    if (listRow && rootEl.contains(listRow)) {
+      const id = listRow.dataset.listId;
+      if (!id) {
+        return;
+      }
+      if (selectedListId === id) {
+        clearListSelection();
+        return;
+      }
+      selectListRow(id);
     }
   };
   rootEl.addEventListener('click', onRootClick);
   cleanup.push(() => rootEl.removeEventListener('click', onRootClick));
+
+  const onRootKeydown = (event) => {
+    if (event.key !== 'Enter' && event.key !== ' ') {
+      return;
+    }
+    const listRow = event.target.closest?.('.tiles-list-row[data-list-id]');
+    if (!listRow || !rootEl.contains(listRow)) {
+      return;
+    }
+    event.preventDefault();
+    const id = listRow.dataset.listId;
+    if (!id) {
+      return;
+    }
+    if (selectedListId === id) {
+      clearListSelection();
+      return;
+    }
+    selectListRow(id);
+  };
+  rootEl.addEventListener('keydown', onRootKeydown);
+  cleanup.push(() => rootEl.removeEventListener('keydown', onRootKeydown));
 }
 
 export function mount(root) {
@@ -1933,6 +2158,8 @@ export function mount(root) {
   orientations = [];
   lastArrange = null;
   lastCoverage = null;
+  selectedListId = null;
+  pendingOrientationSelect = null;
   addSeq = 0;
   arrangeSeq = 0;
   coverageSeq = 0;
@@ -1962,4 +2189,6 @@ export function unmount() {
   orientations = [];
   lastArrange = null;
   lastCoverage = null;
+  selectedListId = null;
+  pendingOrientationSelect = null;
 }

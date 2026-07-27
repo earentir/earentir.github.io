@@ -1488,6 +1488,18 @@ textarea {
 
 .tiles-list-row {
   position: relative;
+  cursor: pointer;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+}
+
+.tiles-list-row:hover {
+  border-color: var(--dmt-accent);
+}
+
+.tiles-list-row.selected {
+  border-color: var(--dmt-accent);
+  border-style: solid;
+  background: color-mix(in srgb, var(--dmt-accent) 12%, transparent);
 }
 
 .tiles-list-header {
