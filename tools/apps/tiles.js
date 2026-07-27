@@ -1012,7 +1012,15 @@ function foldHeader(title, open) {
   `;
 }
 
-async function enrichAndRenderTable() {
+function snapshotListRow(row) {
+  try {
+    return structuredClone(row);
+  } catch {
+    return JSON.parse(JSON.stringify(row));
+  }
+}
+
+function enrichAndRenderTable() {
   const host = $('#tiles-table-host');
   if (!host) {
     return;
@@ -1024,43 +1032,37 @@ async function enrichAndRenderTable() {
 
   const form = readForm();
   const seq = ++listEnrichSeq;
-  const spaceOk = form.spaceOpen && !validateSpace(form);
+  // Space/layout columns come from each row snapshot, not the live form.
+  // spaceOk only picks the header label (Space vs Layout).
+  const spaceOk = listRows.some((row) => row.kind === 'coverage' && row.space)
+    || (form.spaceOpen && !validateSpace(form));
   const priceOk = pricingActive(form);
 
-  // Keep each row's saved snapshot. Only refresh live pricing from the
-  // current price/per — never rewrite older items from the active form.
+  // Never rewrite geometry from the active form — only live price/per.
   const displayRows = listRows.map((row) => {
-    const out = {
-      ...row,
-      costPerM2: row.costPerM2 ?? null,
-      totalCost: row.totalCost ?? null,
-    };
+    const out = snapshotListRow(row);
+    out.costPerM2 = row.costPerM2 ?? null;
+    out.totalCost = row.totalCost ?? null;
+
+    if (!priceOk) {
+      out.costPerM2 = null;
+      out.totalCost = null;
+      return out;
+    }
+
     const orientation = parseOrientation(row.orientation) || {
       w: form.tileW,
       h: form.tileH,
     };
-
-    if (priceOk) {
-      const priced = calcRowPricing(
-        orientation.w,
-        orientation.h,
-        out.totalTiles || 0,
-        form.price,
-        form.per || 1,
-      );
-      out.costPerM2 = priced.costPerM2;
-      out.totalCost = priced.totalCost;
-    } else {
-      out.costPerM2 = null;
-      out.totalCost = null;
-    }
-
-    if (!spaceOk) {
-      out.fullTiles = row.kind === 'coverage' ? row.fullTiles : null;
-      out.cutsLabel = row.kind === 'coverage' ? row.cutsLabel : '';
-      out.space = row.kind === 'coverage' ? row.space : null;
-    }
-
+    const priced = calcRowPricing(
+      orientation.w,
+      orientation.h,
+      out.totalTiles || 0,
+      form.price,
+      form.per || 1,
+    );
+    out.costPerM2 = priced.costPerM2;
+    out.totalCost = priced.totalCost;
     return out;
   });
 
@@ -1608,7 +1610,7 @@ async function onAddToList() {
         return;
       }
 
-      listRows.push({
+      listRows.push(snapshotListRow({
         id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
         kind: 'coverage',
         name: form.name,
@@ -1626,7 +1628,7 @@ async function onAddToList() {
         gapCm: effectiveGroutGapCm(form),
         skirting: Boolean(form.skirting),
         skirtingCm: effectiveSkirtingCm(form),
-      });
+      }));
       saveList();
       enrichAndRenderTable();
       setFoldOpen('list', true);
@@ -1641,7 +1643,7 @@ async function onAddToList() {
   }
 
   if (layout && lastArrange) {
-    listRows.push({
+    listRows.push(snapshotListRow({
       id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
       kind: 'arrange',
       name: form.name,
@@ -1654,7 +1656,7 @@ async function onAddToList() {
       areaM2: lastArrange.total_area_m2,
       costPerM2: withPrice ? (lastArrange.pricing?.cost_per_m2 ?? null) : null,
       totalCost: withPrice ? (lastArrange.pricing?.total_cost ?? null) : null,
-    });
+    }));
     saveList();
     enrichAndRenderTable();
     setFoldOpen('list', true);

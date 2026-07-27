@@ -1,4 +1,4 @@
-import { getToolById, getToolTitle } from './registry.js';
+import { getToolById, getToolTitle } from './registry.js?v=57';
 import { t } from './i18n.js';
 
 const BASE = '/tools';

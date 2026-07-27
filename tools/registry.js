@@ -16,7 +16,7 @@ export const tools = {
   tiles: {
     id: 'tiles',
     path: '/tools/tiles',
-    load: () => import('./apps/tiles.js?v=56'),
+    load: () => import('./apps/tiles.js?v=57'),
     titleKey: 'tilesTitle',
   },
   'wl-sync': {
