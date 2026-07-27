@@ -1314,6 +1314,15 @@ textarea {
   user-select: none;
 }
 
+.tiles-switch-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.tiles-switch-disabled .dmt-switch-slider {
+  cursor: not-allowed;
+}
+
 .tiles-switch-label {
   font-family: var(--tp-font);
   font-size: var(--tp-font-size);

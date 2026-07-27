@@ -23,6 +23,7 @@ const DEFAULT_FORM = {
   per: '1',
   single: false,
   tileGap: false,
+  flatEdge: false,
   name: '',
   selectedLayoutIndex: 0,
   folds: { ...DEFAULT_FOLDS },
@@ -138,6 +139,7 @@ function loadFormState() {
       ...parsed,
       single: Boolean(parsed.single),
       tileGap: Boolean(parsed.tileGap),
+      flatEdge: Boolean(parsed.flatEdge),
       selectedLayoutIndex: Number(parsed.selectedLayoutIndex) || 0,
       folds: loadFoldsState(parsed.folds),
     };
@@ -162,6 +164,7 @@ function saveFormState() {
     per: $('#tile-per')?.value ?? savedForm.per,
     single: Boolean($('#tiles-single')?.checked),
     tileGap: Boolean($('#tiles-gap')?.checked),
+    flatEdge: Boolean($('#tiles-flat-edge')?.checked),
     name: ($('#tiles-name')?.value ?? savedForm.name).trim(),
     selectedLayoutIndex,
     folds,
@@ -205,6 +208,73 @@ function formatCuts(cuts) {
   return cuts.map((cut) => `${cut.size}×${cut.count}`).join(', ');
 }
 
+function parseCutSize(size) {
+  const match = String(size || '').toLowerCase().match(/^(\d+)\s*x\s*(\d+)$/);
+  if (!match) {
+    return null;
+  }
+  return { w: Number(match[1]), h: Number(match[2]) };
+}
+
+/** How many WxH pieces fit in one parent tile (either rotation). */
+function piecesPerParentTile(tileW, tileH, cutW, cutH) {
+  if (!(tileW > 0) || !(tileH > 0) || !(cutW > 0) || !(cutH > 0)) {
+    return 0;
+  }
+  const normal = Math.floor(tileW / cutW) * Math.floor(tileH / cutH);
+  const rotated = Math.floor(tileW / cutH) * Math.floor(tileH / cutW);
+  return Math.max(normal, rotated, 0);
+}
+
+/** Parent tiles needed to supply all cut pieces (packed leftovers). */
+function packedCutParentTiles(tileW, tileH, cuts) {
+  let parents = 0;
+  for (const cut of cuts || []) {
+    const dims = parseCutSize(cut.size);
+    const count = Number(cut.count) || 0;
+    if (!dims || count <= 0) {
+      parents += count;
+      continue;
+    }
+    const per = piecesPerParentTile(tileW, tileH, dims.w, dims.h);
+    parents += per > 0 ? Math.ceil(count / per) : count;
+  }
+  return parents;
+}
+
+/**
+ * When flat-edge packing is on, total_tiles becomes tiles to buy
+ * (full tiles + packed parents for cuts), and pricing is recomputed.
+ */
+function applyFlatEdgePacking(pattern, form) {
+  if (!pattern || !form?.flatEdge || !spaceModeActive(form)) {
+    return pattern;
+  }
+  const tileW = pattern.tile_width_cm;
+  const tileH = pattern.tile_height_cm;
+  const cutParents = packedCutParentTiles(tileW, tileH, pattern.cuts);
+  const buyTiles = (pattern.full_tiles || 0) + cutParents;
+  const next = {
+    ...pattern,
+    piece_tiles: pattern.total_tiles,
+    cut_parent_tiles: cutParents,
+    total_tiles: buyTiles,
+  };
+  if (pricingActive(form) && form.price !== null) {
+    const priced = calcRowPricing(tileW, tileH, buyTiles, form.price, form.per || 1);
+    next.pricing = {
+      ...(pattern.pricing || {}),
+      tiles: buyTiles,
+      packs_needed: Math.ceil(buyTiles / Math.max(1, form.per || 1)),
+      cost_per_m2: priced.costPerM2,
+      total_cost: priced.totalCost,
+      price: form.price,
+      per: form.per || 1,
+    };
+  }
+  return next;
+}
+
 function escapeHtml(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -225,6 +295,7 @@ function readForm() {
   const perRaw = ($('#tile-per')?.value || '').trim();
   const single = Boolean($('#tiles-single')?.checked);
   const tileGap = Boolean($('#tiles-gap')?.checked);
+  const flatEdge = Boolean($('#tiles-flat-edge')?.checked);
   const pricingOpen = isFoldOpen('pricing');
   const spaceOpen = isFoldOpen('space');
   const tilesOpen = isFoldOpen('tiles');
@@ -243,6 +314,7 @@ function readForm() {
     per,
     single,
     tileGap,
+    flatEdge,
     pricingOpen,
     spaceOpen,
     tilesOpen,
@@ -305,9 +377,24 @@ function showCalcStatus(message = '', isError = false) {
 }
 
 function refreshAllViews() {
+  syncFlatEdgeSwitch();
   renderResults();
   enrichAndRenderTable();
   showCalcStatus();
+}
+
+function syncFlatEdgeSwitch() {
+  const input = $('#tiles-flat-edge');
+  const label = input?.closest('.tiles-switch');
+  if (!input) {
+    return;
+  }
+  const enabled = spaceModeActive();
+  input.disabled = !enabled;
+  label?.classList.toggle('tiles-switch-disabled', !enabled);
+  if (!enabled && input.checked) {
+    // Keep saved preference, but packing only applies in space mode.
+  }
 }
 
 function buildOrientations(tileW, tileH, single) {
@@ -562,7 +649,9 @@ function renderCoverageGraph(tileW, tileH, spaceW, spaceH, { maxW = 360, maxH = 
 }
 
 function spaceModeActive(form = readForm()) {
-  return Boolean(form.spaceOpen && !validateSpace(form));
+  const spaceOpen = form.spaceOpen ?? Boolean(form.folds?.space);
+  const spaceInvalid = !(form.spaceW > 0) || !(form.spaceH > 0);
+  return Boolean(spaceOpen && !spaceInvalid);
 }
 
 function renderCoverageLayouts() {
@@ -577,7 +666,7 @@ function renderCoverageLayouts() {
   const pricing = pricingActive(form);
   const multi = lastCoverage.patterns.length > 1;
   const tileGap = Boolean(form.tileGap);
-  const pattern = lastCoverage.patterns[selectedLayoutIndex];
+  const pattern = applyFlatEdgePacking(lastCoverage.patterns[selectedLayoutIndex], form);
   const patternPricing = pricing ? pattern?.pricing : null;
 
   const summaryCells = [
@@ -615,14 +704,17 @@ function renderCoverageLayouts() {
       <div class="tiles-orient-wrap">
         <table class="tiles-orient-table">
           <tbody>
-            ${lastCoverage.patterns.map((item, index) => {
+            ${lastCoverage.patterns.map((raw, index) => {
+              const item = applyFlatEdgePacking(raw, form);
               const isSelected = index === selectedLayoutIndex ? ' selected' : '';
+              const packedCuts = item.cut_parent_tiles
+                ?? Math.max(0, item.total_tiles - item.full_tiles);
               return `
                 <tr class="tiles-orient-row${isSelected}" data-layout-index="${index}" tabindex="0">
                   ${multi ? `<td class="tiles-orient-tile">${item.tile_width_cm}×${item.tile_height_cm}</td>` : ''}
                   <td class="tiles-orient-grid">
                     <span class="tiles-orient-grid-inner">
-                      <span class="tiles-orient-rc">${item.full_tiles}+${Math.max(0, item.total_tiles - item.full_tiles)}</span>
+                      <span class="tiles-orient-rc">${item.full_tiles}+${packedCuts}</span>
                       <span class="tiles-orient-arrow" aria-hidden="true">→</span>
                     </span>
                   </td>
@@ -777,15 +869,16 @@ async function enrichAndRenderTable() {
         const data = await fetchCoverageCached(form, orientation);
         const pattern = pickCoveragePattern(data, orientation);
         if (pattern) {
+          const packed = applyFlatEdgePacking(pattern, form);
           out.kind = 'coverage';
           out.space = `${data.space_width_cm}×${data.space_height_cm}`;
-          out.totalTiles = pattern.total_tiles;
-          out.fullTiles = pattern.full_tiles;
-          out.cutsLabel = formatCuts(pattern.cuts);
+          out.totalTiles = packed.total_tiles;
+          out.fullTiles = packed.full_tiles;
+          out.cutsLabel = formatCuts(packed.cuts);
           out.areaM2 = data.space_area_m2;
-          if (priceOk && pattern.pricing) {
-            out.costPerM2 = pattern.pricing.cost_per_m2;
-            out.totalCost = pattern.pricing.total_cost;
+          if (priceOk && packed.pricing) {
+            out.costPerM2 = packed.pricing.cost_per_m2;
+            out.totalCost = packed.pricing.total_cost;
           }
         }
       } catch {
@@ -1042,6 +1135,13 @@ function renderShell() {
               <span class="tiles-switch-label">${t('tilesGap')}</span>
               <span class="dmt-switch">
                 <input type="checkbox" id="tiles-gap" role="switch" aria-label="${attrValue(t('tilesGap'))}"${form.tileGap ? ' checked' : ''}>
+                <span class="dmt-switch-slider"></span>
+              </span>
+            </label>
+            <label class="tiles-switch${spaceModeActive(form) ? '' : ' tiles-switch-disabled'}" title="${attrValue(t('tilesFlatEdgeHelp'))}">
+              <span class="tiles-switch-label">${t('tilesFlatEdge')}</span>
+              <span class="dmt-switch">
+                <input type="checkbox" id="tiles-flat-edge" role="switch" aria-label="${attrValue(t('tilesFlatEdge'))}"${form.flatEdge ? ' checked' : ''}${spaceModeActive(form) ? '' : ' disabled'}>
                 <span class="dmt-switch-slider"></span>
               </span>
             </label>
@@ -1312,8 +1412,8 @@ async function onAddToList() {
         return;
       }
       const pattern = (lastCoverage && coveragePattern)
-        ? coveragePattern
-        : pickCoveragePattern(data, orientation) || data.patterns?.[0];
+        ? applyFlatEdgePacking(coveragePattern, form)
+        : applyFlatEdgePacking(pickCoveragePattern(data, orientation) || data.patterns?.[0], form);
       if (!pattern) {
         showCalcStatus(t('tilesNoPatterns'), true);
         return;
@@ -1332,6 +1432,7 @@ async function onAddToList() {
         areaM2: data.space_area_m2,
         costPerM2: withPrice ? (pattern.pricing?.cost_per_m2 ?? null) : null,
         totalCost: withPrice ? (pattern.pricing?.total_cost ?? null) : null,
+        flatEdge: Boolean(form.flatEdge),
       });
       saveList();
       enrichAndRenderTable();
@@ -1379,6 +1480,11 @@ function bindEvents() {
     saveFormState();
     renderResults();
   };
+  const onFlatEdgeChange = () => {
+    saveFormState();
+    renderResults();
+    enrichAndRenderTable();
+  };
   const orientationInputs = $all('#tile-width, #tile-height, #tile-count, #tiles-single, #tile-price, #tile-per');
   orientationInputs.forEach((el) => {
     el.addEventListener('input', onOrientationInput);
@@ -1394,6 +1500,10 @@ function bindEvents() {
   const gapInput = $('#tiles-gap');
   gapInput?.addEventListener('change', onGapChange);
   cleanup.push(() => gapInput?.removeEventListener('change', onGapChange));
+
+  const flatEdgeInput = $('#tiles-flat-edge');
+  flatEdgeInput?.addEventListener('change', onFlatEdgeChange);
+  cleanup.push(() => flatEdgeInput?.removeEventListener('change', onFlatEdgeChange));
 
   const onSpaceInput = () => {
     coverageCache.clear();
