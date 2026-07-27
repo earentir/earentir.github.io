@@ -61,6 +61,12 @@ function buildMenuModel() {
       ],
     },
     {
+      id: 'api',
+      accel: 'a',
+      labelKey: 'menuApi',
+      action: () => navigate('api'),
+    },
+    {
       id: 'options',
       accel: 'o',
       labelKey: 'menuOptions',
@@ -103,12 +109,6 @@ function buildMenuModel() {
           action: () => setFont('tiny5'),
         },
       ],
-    },
-    {
-      id: 'api',
-      accel: 'a',
-      labelKey: 'menuApi',
-      action: () => navigate('api'),
     },
     {
       id: 'help',
