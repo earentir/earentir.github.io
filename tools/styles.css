@@ -1168,6 +1168,15 @@ textarea {
   fill: var(--dmt-accent-hover);
 }
 
+.tiles-cover-skirting {
+  fill: var(--dmt-panel-border);
+  opacity: 0.35;
+}
+
+.tiles-cover-field {
+  fill: var(--dmt-panel-bg);
+}
+
 .tiles-cover-legend {
   display: flex;
   flex-wrap: wrap;

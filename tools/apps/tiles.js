@@ -26,6 +26,8 @@ const DEFAULT_FORM = {
   flatEdge: false,
   groutGap: false,
   gapCm: '0.3',
+  skirting: false,
+  skirtingCm: '0.5',
   name: '',
   selectedLayoutIndex: 0,
   folds: { ...DEFAULT_FOLDS },
@@ -146,6 +148,10 @@ function loadFormState() {
       gapCm: parsed.gapCm != null && String(parsed.gapCm).trim() !== ''
         ? String(parsed.gapCm)
         : DEFAULT_FORM.gapCm,
+      skirting: Boolean(parsed.skirting),
+      skirtingCm: parsed.skirtingCm != null && String(parsed.skirtingCm).trim() !== ''
+        ? String(parsed.skirtingCm)
+        : DEFAULT_FORM.skirtingCm,
       selectedLayoutIndex: Number(parsed.selectedLayoutIndex) || 0,
       folds: loadFoldsState(parsed.folds),
     };
@@ -173,6 +179,8 @@ function saveFormState() {
     flatEdge: Boolean($('#tiles-flat-edge')?.checked),
     groutGap: Boolean($('#tiles-grout-gap')?.checked),
     gapCm: ($('#tiles-gap-cm')?.value ?? savedForm.gapCm ?? DEFAULT_FORM.gapCm).trim() || DEFAULT_FORM.gapCm,
+    skirting: Boolean($('#tiles-skirting')?.checked),
+    skirtingCm: ($('#tiles-skirting-cm')?.value ?? savedForm.skirtingCm ?? DEFAULT_FORM.skirtingCm).trim() || DEFAULT_FORM.skirtingCm,
     name: ($('#tiles-name')?.value ?? savedForm.name).trim(),
     selectedLayoutIndex,
     folds,
@@ -319,6 +327,9 @@ function readForm() {
   const groutGap = Boolean($('#tiles-grout-gap')?.checked);
   const gapCmRaw = ($('#tiles-gap-cm')?.value || '').trim();
   const gapCm = gapCmRaw === '' ? Number(DEFAULT_FORM.gapCm) : Number(gapCmRaw);
+  const skirting = Boolean($('#tiles-skirting')?.checked);
+  const skirtingCmRaw = ($('#tiles-skirting-cm')?.value || '').trim();
+  const skirtingCm = skirtingCmRaw === '' ? Number(DEFAULT_FORM.skirtingCm) : Number(skirtingCmRaw);
   const pricingOpen = isFoldOpen('pricing');
   const spaceOpen = isFoldOpen('space');
   const tilesOpen = isFoldOpen('tiles');
@@ -340,6 +351,8 @@ function readForm() {
     flatEdge,
     groutGap,
     gapCm,
+    skirting,
+    skirtingCm,
     pricingOpen,
     spaceOpen,
     tilesOpen,
@@ -426,6 +439,17 @@ function syncSpaceOnlySwitches() {
   }
   if (gapField) {
     gapField.disabled = !spaceOk || !groutInput?.checked;
+  }
+
+  const skirtingInput = $('#tiles-skirting');
+  const skirtingLabel = skirtingInput?.closest('.tiles-switch');
+  const skirtingField = $('#tiles-skirting-cm');
+  if (skirtingInput) {
+    skirtingInput.disabled = !spaceOk;
+    skirtingLabel?.classList.toggle('tiles-switch-disabled', !spaceOk);
+  }
+  if (skirtingField) {
+    skirtingField.disabled = !spaceOk || !skirtingInput?.checked;
   }
 }
 
@@ -711,25 +735,63 @@ function effectiveGroutGapCm(form = readForm()) {
   return gap > 0 ? gap : 0;
 }
 
-function buildLocalCoverageData(form, orients) {
-  const gap = effectiveGroutGapCm(form);
-  const patterns = (orients?.length ? orients : [{ w: form.tileW, h: form.tileH }])
-    .map((o) => buildCoveragePattern(o.w, o.h, form.spaceW, form.spaceH, gap, form));
+function effectiveSkirtingCm(form = readForm()) {
+  if (!form.skirting || !spaceModeActive(form)) {
+    return 0;
+  }
+  const inset = Number(form.skirtingCm);
+  return inset > 0 ? inset : 0;
+}
+
+function coverageField(form = readForm()) {
+  const inset = effectiveSkirtingCm(form);
+  const width = Math.max(0, Number(form.spaceW) - 2 * inset);
+  const height = Math.max(0, Number(form.spaceH) - 2 * inset);
   return {
-    space_width_cm: form.spaceW,
-    space_height_cm: form.spaceH,
-    space_area_m2: (form.spaceW * form.spaceH) / 10000,
-    patterns,
-    gap_cm: gap,
+    inset,
+    width,
+    height,
+    fullWidth: Number(form.spaceW),
+    fullHeight: Number(form.spaceH),
   };
 }
 
-function renderCoverageGraph(tileW, tileH, spaceW, spaceH, { maxW = 360, maxH = 180, tileGap = false, gapCm = 0 } = {}) {
+function needsLocalCoverage(form = readForm()) {
+  return effectiveGroutGapCm(form) > 0 || effectiveSkirtingCm(form) > 0;
+}
+
+function buildLocalCoverageData(form, orients) {
+  const gap = effectiveGroutGapCm(form);
+  const field = coverageField(form);
+  const patterns = (orients?.length ? orients : [{ w: form.tileW, h: form.tileH }])
+    .map((o) => buildCoveragePattern(o.w, o.h, field.width, field.height, gap, form));
+  return {
+    space_width_cm: field.fullWidth,
+    space_height_cm: field.fullHeight,
+    tiled_width_cm: field.width,
+    tiled_height_cm: field.height,
+    space_area_m2: (field.fullWidth * field.fullHeight) / 10000,
+    patterns,
+    gap_cm: gap,
+    skirting_cm: field.inset,
+  };
+}
+
+function renderCoverageGraph(tileW, tileH, spaceW, spaceH, {
+  maxW = 360,
+  maxH = 180,
+  tileGap = false,
+  gapCm = 0,
+  skirtingCm = 0,
+} = {}) {
   if (!(tileW > 0) || !(tileH > 0) || !(spaceW > 0) || !(spaceH > 0)) {
     return '';
   }
 
-  const cells = buildCoverageCells(tileW, tileH, spaceW, spaceH, gapCm);
+  const inset = skirtingCm > 0 ? skirtingCm : 0;
+  const fieldW = Math.max(0, spaceW - 2 * inset);
+  const fieldH = Math.max(0, spaceH - 2 * inset);
+  const cells = buildCoverageCells(tileW, tileH, fieldW, fieldH, gapCm);
   const scale = Math.min(maxW / spaceW, maxH / spaceH, 1);
   const svgW = Math.max(1, Math.round(spaceW * scale));
   const svgH = Math.max(1, Math.round(spaceH * scale));
@@ -737,9 +799,14 @@ function renderCoverageGraph(tileW, tileH, spaceW, spaceH, { maxW = 360, maxH = 
   const visualGap = showGap ? Math.min(1.5, Math.max(0.5, scale * (gapCm > 0 ? Math.max(gapCm, 0.3) : 1))) : 0;
   const seamFix = showGap ? 0 : 0.75;
 
+  const skirtingRect = inset > 0
+    ? `<rect class="tiles-cover-skirting" x="0" y="0" width="${svgW}" height="${svgH}" />
+       <rect class="tiles-cover-field" x="${(inset * scale).toFixed(2)}" y="${(inset * scale).toFixed(2)}" width="${(fieldW * scale).toFixed(2)}" height="${(fieldH * scale).toFixed(2)}" />`
+    : '';
+
   const rects = cells.map((cell) => {
-    const x = cell.x * scale;
-    const y = cell.y * scale;
+    const x = (cell.x + inset) * scale;
+    const y = (cell.y + inset) * scale;
     const rw = Math.max(0.75, cell.w * scale - visualGap + seamFix);
     const rh = Math.max(0.75, cell.h * scale - visualGap + seamFix);
     const cls = cell.cut ? 'tiles-cover-cut' : 'tiles-cover-full';
@@ -748,7 +815,7 @@ function renderCoverageGraph(tileW, tileH, spaceW, spaceH, { maxW = 360, maxH = 
 
   return `
     <div class="tiles-cover-wrap" style="width:${svgW}px;height:${svgH}px" title="${attrValue(`${spaceW}×${spaceH}`)}">
-      <svg class="tiles-cover-svg${showGap ? '' : ' tiles-cover-svg-tight'}" viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}" aria-hidden="true" focusable="false">${rects}</svg>
+      <svg class="tiles-cover-svg${showGap ? '' : ' tiles-cover-svg-tight'}" viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}" aria-hidden="true" focusable="false">${skirtingRect}${rects}</svg>
     </div>
   `;
 }
@@ -772,6 +839,7 @@ function renderCoverageLayouts() {
   const multi = lastCoverage.patterns.length > 1;
   const tileGap = Boolean(form.tileGap);
   const gapCm = effectiveGroutGapCm(form);
+  const skirtingCm = effectiveSkirtingCm(form);
   const pattern = applyFlatEdgePacking(lastCoverage.patterns[selectedLayoutIndex], form);
   const patternPricing = pricing ? pattern?.pricing : null;
 
@@ -830,7 +898,7 @@ function renderCoverageLayouts() {
                     item.tile_height_cm,
                     lastCoverage.space_width_cm,
                     lastCoverage.space_height_cm,
-                    { tileGap, gapCm },
+                    { tileGap, gapCm, skirtingCm },
                   )}</td>
                 </tr>
               `;
@@ -972,8 +1040,7 @@ async function enrichAndRenderTable() {
 
     if (spaceOk) {
       try {
-        const gap = effectiveGroutGapCm(form);
-        const data = gap > 0
+        const data = needsLocalCoverage(form)
           ? buildLocalCoverageData(form, [orientation])
           : await fetchCoverageCached(form, orientation);
         const pattern = pickCoveragePattern(data, orientation);
@@ -1267,6 +1334,17 @@ function renderShell() {
               <label for="tiles-gap-cm">${t('tilesGapCm')}</label>
               <input type="number" id="tiles-gap-cm" min="0" step="0.1" value="${attrValue(form.gapCm ?? DEFAULT_FORM.gapCm)}"${spaceModeActive(form) && form.groutGap ? '' : ' disabled'}>
             </div>
+            <label class="tiles-switch${spaceModeActive(form) ? '' : ' tiles-switch-disabled'}" title="${attrValue(t('tilesSkirtingHelp'))}">
+              <span class="tiles-switch-label">${t('tilesSkirting')}</span>
+              <span class="dmt-switch">
+                <input type="checkbox" id="tiles-skirting" role="switch" aria-label="${attrValue(t('tilesSkirting'))}"${form.skirting ? ' checked' : ''}${spaceModeActive(form) ? '' : ' disabled'}>
+                <span class="dmt-switch-slider"></span>
+              </span>
+            </label>
+            <div class="dmt-field tiles-gap-cm-field">
+              <label for="tiles-skirting-cm">${t('tilesSkirtingCm')}</label>
+              <input type="number" id="tiles-skirting-cm" min="0" step="0.1" value="${attrValue(form.skirtingCm ?? DEFAULT_FORM.skirtingCm)}"${spaceModeActive(form) && form.skirting ? '' : ' disabled'}>
+            </div>
           </div>
           <div id="tiles-results"></div>
         </div>
@@ -1433,8 +1511,7 @@ async function loadCoverage() {
   const seq = ++coverageSeq;
   showCalcStatus('…');
   try {
-    const gap = effectiveGroutGapCm(form);
-    const data = gap > 0
+    const data = needsLocalCoverage(form)
       ? buildLocalCoverageData(form, orientations)
       : await fetchCoverageCached(form, orientation);
     if (seq !== coverageSeq) {
@@ -1531,9 +1608,12 @@ async function onAddToList() {
     showCalcStatus('…');
     try {
       const gap = effectiveGroutGapCm(form);
-      const data = lastCoverage && coveragePattern && gap === (lastCoverage.gap_cm || 0)
+      const skirting = effectiveSkirtingCm(form);
+      const data = lastCoverage && coveragePattern
+        && gap === (lastCoverage.gap_cm || 0)
+        && skirting === (lastCoverage.skirting_cm || 0)
         ? lastCoverage
-        : gap > 0
+        : needsLocalCoverage(form)
           ? buildLocalCoverageData(form, [orientation])
           : await fetchCoverage(form, orientation);
       if (seq !== addSeq) {
@@ -1638,6 +1718,19 @@ function bindEvents() {
     saveFormState();
     scheduleRefreshOrientations({ resetLayout: false });
   };
+  const onSkirtingChange = () => {
+    const on = Boolean($('#tiles-skirting')?.checked);
+    const field = $('#tiles-skirting-cm');
+    if (field) {
+      field.disabled = !spaceModeActive() || !on;
+    }
+    saveFormState();
+    flushRefreshOrientations({ resetLayout: false });
+  };
+  const onSkirtingCmInput = () => {
+    saveFormState();
+    scheduleRefreshOrientations({ resetLayout: false });
+  };
   const orientationInputs = $all('#tile-width, #tile-height, #tile-count, #tiles-single, #tile-price, #tile-per');
   orientationInputs.forEach((el) => {
     el.addEventListener('input', onOrientationInput);
@@ -1668,6 +1761,18 @@ function bindEvents() {
   cleanup.push(() => {
     gapCmInput?.removeEventListener('input', onGapCmInput);
     gapCmInput?.removeEventListener('change', onGapCmInput);
+  });
+
+  const skirtingInput = $('#tiles-skirting');
+  skirtingInput?.addEventListener('change', onSkirtingChange);
+  cleanup.push(() => skirtingInput?.removeEventListener('change', onSkirtingChange));
+
+  const skirtingCmInput = $('#tiles-skirting-cm');
+  skirtingCmInput?.addEventListener('input', onSkirtingCmInput);
+  skirtingCmInput?.addEventListener('change', onSkirtingCmInput);
+  cleanup.push(() => {
+    skirtingCmInput?.removeEventListener('input', onSkirtingCmInput);
+    skirtingCmInput?.removeEventListener('change', onSkirtingCmInput);
   });
 
   const onSpaceInput = () => {
