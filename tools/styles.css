@@ -1489,6 +1489,15 @@ textarea {
   white-space: nowrap;
 }
 
+.tiles-list-cell.tiles-list-cuts {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.35;
+}
+
 .tiles-list-head {
   color: var(--dmt-accent);
 }
