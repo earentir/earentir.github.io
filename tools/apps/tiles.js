@@ -506,7 +506,52 @@ function coverageCacheKey(form, orientation) {
     form.price ?? '',
     form.per || 1,
     form.single ? 1 : 0,
+    effectiveGroutGapCm(form),
+    effectiveSkirtingCm(form),
   ].join('|');
+}
+
+/** True only when lastCoverage is for this exact form (space/tiles/gap/skirting). */
+function coverageMatchesForm(data, form) {
+  if (!data || !form) {
+    return false;
+  }
+  if (Number(data.space_width_cm) !== Number(form.spaceW)) {
+    return false;
+  }
+  if (Number(data.space_height_cm) !== Number(form.spaceH)) {
+    return false;
+  }
+  if ((data.gap_cm || 0) !== effectiveGroutGapCm(form)) {
+    return false;
+  }
+  if ((data.skirting_cm || 0) !== effectiveSkirtingCm(form)) {
+    return false;
+  }
+  const patterns = data.patterns || [];
+  if (!patterns.length) {
+    return false;
+  }
+  return patterns.some((pattern) => (
+    (Number(pattern.tile_width_cm) === Number(form.tileW)
+      && Number(pattern.tile_height_cm) === Number(form.tileH))
+    || (Number(pattern.tile_width_cm) === Number(form.tileH)
+      && Number(pattern.tile_height_cm) === Number(form.tileW))
+  ));
+}
+
+async function resolveCoverageForForm(form) {
+  if (coverageMatchesForm(lastCoverage, form)) {
+    return lastCoverage;
+  }
+  if (needsLocalCoverage(form)) {
+    const orients = orientations.length
+      ? orientations
+      : buildOrientations(form.tileW, form.tileH, form.single);
+    return buildLocalCoverageData(form, orients);
+  }
+  const primary = orientations[0] || { w: form.tileW, h: form.tileH };
+  return fetchCoverage(form, primary);
 }
 
 async function fetchCoverageCached(form, orientation) {
@@ -1578,33 +1623,34 @@ async function onAddToList() {
   const withPrice = pricingActive(form);
   const useSpace = spaceModeActive(form);
   const layout = lastArrange?.layouts?.[selectedLayoutIndex];
-  const coveragePattern = lastCoverage?.patterns?.[selectedLayoutIndex];
 
   if (useSpace) {
-    const orientation = coveragePattern
-      ? { w: coveragePattern.tile_width_cm, h: coveragePattern.tile_height_cm }
-      : layout
-        ? { w: layout.tileW, h: layout.tileH }
-        : { w: form.tileW, h: form.tileH };
+    // Cancel debounced refresh — add must snapshot the form as it is now,
+    // not a stale lastCoverage from the previous space/tile size.
+    clearTimeout(refreshTimer);
+    refreshTimer = null;
 
     const seq = ++addSeq;
+    const addBtn = $('#tiles-add-btn');
+    if (addBtn) {
+      addBtn.disabled = true;
+    }
     showCalcStatus('…');
     try {
-      const gap = effectiveGroutGapCm(form);
-      const skirting = effectiveSkirtingCm(form);
-      const data = lastCoverage && coveragePattern
-        && gap === (lastCoverage.gap_cm || 0)
-        && skirting === (lastCoverage.skirting_cm || 0)
-        ? lastCoverage
-        : needsLocalCoverage(form)
-          ? buildLocalCoverageData(form, [orientation])
-          : await fetchCoverage(form, orientation);
+      const data = await resolveCoverageForForm(form);
       if (seq !== addSeq) {
         return;
       }
-      const pattern = (lastCoverage && coveragePattern && data === lastCoverage)
-        ? applyFlatEdgePacking(coveragePattern, form)
-        : applyFlatEdgePacking(pickCoveragePattern(data, orientation) || data.patterns?.[0], form);
+      if (!data?.patterns?.length) {
+        showCalcStatus(t('tilesNoPatterns'), true);
+        return;
+      }
+
+      lastCoverage = data;
+      if (selectedLayoutIndex >= data.patterns.length) {
+        selectedLayoutIndex = 0;
+      }
+      const pattern = applyFlatEdgePacking(data.patterns[selectedLayoutIndex], form);
       if (!pattern) {
         showCalcStatus(t('tilesNoPatterns'), true);
         return;
@@ -1630,6 +1676,7 @@ async function onAddToList() {
         skirtingCm: effectiveSkirtingCm(form),
       }));
       saveList();
+      renderResults();
       enrichAndRenderTable();
       setFoldOpen('list', true);
       showCalcStatus();
@@ -1638,6 +1685,10 @@ async function onAddToList() {
         return;
       }
       showCalcStatus(`${t('tilesError')}: ${err.message || err}`, true);
+    } finally {
+      if (seq === addSeq && addBtn) {
+        addBtn.disabled = false;
+      }
     }
     return;
   }
