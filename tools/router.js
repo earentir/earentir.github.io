@@ -1,5 +1,6 @@
-import { getToolById, getToolTitle } from './registry.js?v=61';
+import { getToolById, getToolTitle } from './registry.js?v=62';
 import { t } from './i18n.js';
+import { applySeo } from './seo.js?v=1';
 
 const BASE = '/tools';
 
@@ -11,6 +12,9 @@ function normalizePath(pathname) {
   let path = pathname || '/';
   if (path.length > 1 && path.endsWith('/')) {
     path = path.slice(0, -1);
+  }
+  if (path.endsWith('/index.html')) {
+    path = path.slice(0, -'/index.html'.length) || '/';
   }
   if (path === BASE || path === `${BASE}/index.html`) {
     return 'home';
@@ -53,6 +57,7 @@ async function loadTool(toolId) {
   }
   root.replaceChildren();
   currentId = tool.id;
+  applySeo(tool.id);
 
   try {
     const mod = await tool.load();
@@ -73,6 +78,7 @@ async function loadTool(toolId) {
     console.error(err);
   }
 
+  // Prefer localized document title after i18n is ready; keep OG tags from applySeo.
   document.title = tool.id === 'home'
     ? t('appTitle')
     : `${getToolTitle(tool.id)} — ${t('appTitle')}`;
